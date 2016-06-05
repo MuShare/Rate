@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>Subscribe</title>
+        <link href="static/img/favicon.ico" type="image/x-icon" rel="icon">
+        <link href="static/css/bootstrap.min.css" rel="stylesheet"/>
+        <link href="static/css/bootstrap-switch.min.css" rel="stylesheet">
+        <link href="static/css/style.css" rel="stylesheet"/>
+        <link href="static/css/font-awesome.min.css" rel="stylesheet"/>
+        <link href="static/css/mengular.css" rel="stylesheet">
+        <link href="static/css/subscribe.css" rel="stylesheet">
+        <script src="static/js/jquery.min.js"></script>
+        <script src="static/js/bootstrap.min.js"></script>
+        <script src="static/js/bootstrap-switch.min.js"></script>
+        <script src="static/js/jquery.bootstrap.min.js"></script>
+        <script src="static/js/mengular.js"></script>
+        <script src="static/js/tools.js"></script>
+        <script src="dwr/engine.js"></script>
+        <script src="dwr/interface/UserService.js"></script>
+        <script src="dwr/interface/CurrencyService.js"></script>
+        <script src="static/js/subscribe.js"></script>
+    </head>
+    <body>
+        <div class="header" id="home">
+            <div id="head"></div>
+            <div class="header-banner">
+                <section class="bgi banner5"><h2>My Subscribes</h2></section>
+            </div>
+        </div>
+        <div class="container">
+            <div id="subscribe-top" class="alert alert-warning">
+                <span>You have <strong id="subscribe-count"></strong> Subscribs</span>
+                <i class="fa fa-lg fa-plus pull-right" data-toggle="modal" data-target="#add-subscribe-modal"></i>
+            </div>
+            <div id="subscribe-list-header" class="list-group">
+                <div class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-4 col-xs-12"><strong>Subscribe Name</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>From</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>To</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Min</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Max</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Current</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Edit</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Delete</strong></div>
+                        <div class="col-md-1 hidden-sm hidden-xs"><strong>Recent</strong></div>
+                    </div>
+                </div>
+            </div>
+            <div id="subscribe-list" class="list-group">
+                <div id="${sid}$" class="list-group-item mengular-template subscribe-list-template">
+                    <div class="row">
+                        <div class="col-md-4 subscribe-list-sname">${sname}$</div>
+                        <div class="col-md-1 col-xs-2">${from}$</div>
+                        <div class="col-md-1 col-xs-2">${to}$</div>
+                        <div class="col-md-1 col-xs-2">${min}$</div>
+                        <div class="col-md-1 col-xs-2">${max}$</div>
+                        <div class="col-md-1 col-xs-2">${current}$</div>
+                        <div class="col-md-1 col-xs-2 col-xs-offset-2 subscribe-list-edit">
+                            <i class="fa fa-lg fa-gear text-success"></i>
+                        </div>
+                        <div class="col-md-1 col-xs-2 subscribe-list-remove">
+                            <i class="fa fa-lg fa-trash text-danger"></i>
+                        </div>
+                        <div class="col-md-1 col-xs-2 subscribe-list-recent">
+                            <a href="rate.html?start=${start}$&end=${end}$&from=${fromCid}$&to=${toCid}$" target="_blank">
+                                <i class="fa fa-line-chart text-primary"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="foot"></div>
+        <div id="add-subscribe-modal" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Add Subscribe</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="input-group">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-feed fa-lg"></i>
+                                    </span>
+                                    <input id="add-subscribe-sname" type="email" class="form-control" placeholder="Subscribe Name">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="input-group">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-angle-double-up fa-lg"></i>
+                                    </span>
+                                    <input id="add-subscribe-min" type="email" class="form-control" placeholder="Min Rate">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-angle-double-down fa-lg"></i>
+                                    </span>
+                                    <input id="add-subscribe-max" type="email" class="form-control" placeholder="Max Rate">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="btn-group">
+                                    <button id="add-subscribe-from-button" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <img class="img-rounded select-img" height="20px">
+                                        <span class="add-subscribe-code">From Currnecy</span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <input id="add-subscribe-from" type="hidden">
+                                    <ul id="add-subscribe-from-list" class="dropdown-menu" role="menu">
+                                        <li data-id="${cid}$" data-code="${code}$" class="mengular-template add-subscribe-from-list-template">
+                                            <a>
+                                                <img src="${src}$">
+                                                <span>${code}$</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="btn-group">
+                                    <button id="add-subscribe-to-button" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <img class="img-rounded select-img" height="20px">
+                                        <span class="add-subscribe-code">To Currnecy</span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <input id="add-subscribe-to" type="hidden">
+                                    <ul id="add-subscribe-to-list" class="dropdown-menu" role="menu">
+                                        <li data-id="${cid}$" data-code="${code}$" class="mengular-template add-subscribe-to-list-template">
+                                            <a>
+                                                <img src="${src}$">
+                                                <span>${code}$</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-sm-6">
+                                <label class="text-muted switch-label">Enable</label>
+                                <input id="add-subscribe-enable" type="checkbox" data-size="small" data-on-color="primary" data-on-text="YES" data-off-text="NO">
+                            </div>
+                            <div class="col-xs-12 col-sm-6">
+                                <label class="text-muted switch-label">Once</label>
+                                <input id="add-subscribe-once" type="checkbox" data-size="small" data-on-color="info" data-on-text="YES" data-off-text="NO">
+                            </div>
+                            <div class="col-xs-12 col-sm-6">
+                                <label class="text-muted switch-label">Send Email</label>
+                                <input id="add-subscribe-email" type="checkbox" data-size="small" data-on-color="success" data-on-text="YES" data-off-text="NO">
+                            </div>
+                            <div class="col-xs-12 col-sm-6">
+                                <label class="text-muted switch-label">Send SMS</label>
+                                <input id="add-subscribe-sms" type="checkbox" data-size="small" data-on-color="warning" data-on-text="YES" data-off-text="NO">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button id="add-subscribe-submit" class="btn btn-success">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="edit-subscribe-modal" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Add Subscribe</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="input-group">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-feed fa-lg"></i>
+                                    </span>
+                                    <input id="edit-subscribe-sname" type="email" class="form-control" placeholder="Subscribe Name">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="input-group">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-angle-double-up fa-lg"></i>
+                                    </span>
+                                    <input id="edit-subscribe-min" type="email" class="form-control" placeholder="Min Rate">
+                                    <span class="input-group-addon">
+                                        <i class="fa fa-angle-double-down fa-lg"></i>
+                                    </span>
+                                    <input id="edit-subscribe-max" type="email" class="form-control" placeholder="Max Rate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button id="edit-subscribe-submit" class="btn btn-success">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

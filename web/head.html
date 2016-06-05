@@ -1,0 +1,41 @@
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="index.html"><h1>Qucik Rate</h1><br/><span>Subcribe for you</span></a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right margin-top cl-effect-2">
+                <li id="head-login"><a href="login.html"><span data-hover="Sign In">Sign In</span></a></li>
+                <li id="head-user"><a href="subscribe.html"><span data-hover="My Subscribe">My Subscribe</span></a></li>
+                <li id="head-logout"><a href=""><span data-hover="Sign In">Sign Out</span></a></li>
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</nav>
+<script>
+    $(document).ready(function () {
+       checkSession(function (user) {
+           if(user!=null) {
+               $("#head-user, #head-logout").show();
+           } else {
+               $("#head-login").show();
+           }
+       });
+    });
+</script>
+<style>
+    #head-user,
+    #head-login,
+    #head-logout {
+        display: none;
+    }
+</style>

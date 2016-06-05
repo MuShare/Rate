@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+       xsi:schemaLocation="
+  http://www.springframework.org/schema/beans 
+  http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+  http://www.directwebremoting.org/schema/spring-dwr
+  http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd">
+
+    <!-- DWR will scan all Spring managed beans containing @RemoteProxy or
+     @RemoteMethod annotations and register Creator proxies for them.
+     This will NOT scan any classes not managed by Spring. -->
+    <dwr:annotation-config />
+
+    <!-- DWR will scan the classpath and search classes containing @RemoteProxy or
+     @RemoteMethod annotations. This will register the beans and Creator proxies for these classes.-->
+    <dwr:annotation-scan base-package="edu.ut.softlab.rate" scanDataTransferObject="true" scanRemoteProxy="true" />
+
+    <!-- DWR will map util.js and engine.js files to the dwrController.
+     You can then include this files as external Javascript references from your JSP -->
+    <dwr:url-mapping />
+
+    <!-- Defines the dwrController. During production, set the debug property to false -->
+    <dwr:controller id="dwrController" debug="true" />
+
+    <!-- This is required if you want to configure any beans not managed by
+     Spring. Leaving it enabled doesn't do any negative effects. Here's a
+     sample config:
+     <dwr:configuration>
+      <dwr:convert type="bean" class="org.krams.tutorial.CustomClass" />
+     </dwr:configuration> -->
+    <dwr:configuration />
+
+    <!-- Some articles
+     DWR 2.0.x, Spring 2.x, with Spring MVC
+     http://www.butterdev.com/dwr/2008/02/dwr-20x-spring-2x-with-spring-mvc/ -->
+</beans>

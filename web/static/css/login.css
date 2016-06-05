@@ -1,0 +1,13 @@
+.banner-forms {
+    width: 100%;
+    display: block;
+    margin-bottom: 30px;
+}
+
+#login-form .input-group i {
+    width: 25px;
+}
+
+#login-submit {
+    margin-bottom: 15px;
+}
