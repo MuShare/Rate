@@ -1,0 +1,13 @@
+#register-form .input-group-addon i {
+    width: 25px;
+}
+
+.banner-forms {
+    width: 100%;
+    display: block;
+    margin-bottom: 30px;
+}
+
+#register-submit {
+    margin-bottom: 15px;
+}
