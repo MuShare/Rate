@@ -57,6 +57,17 @@ public class Subscribe implements Serializable{
     @Column(name="isSendSms")
     private Boolean isSendSms;
 
+
+    private boolean inRange;
+
+    public boolean getInRange() {
+        return inRange;
+    }
+
+    public void setInRange(boolean inRange) {
+        this.inRange = inRange;
+    }
+
     public String getSid() {
         return sid;
     }
