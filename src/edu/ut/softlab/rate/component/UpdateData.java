@@ -9,6 +9,7 @@ import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Rate;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.model.User;
+import edu.ut.softlab.rate.service.IRateService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,9 @@ public class UpdateData {
 
     @Resource(name = "userDao")
     private IUserDao userDao;
+
+    @Resource(name = "rateService")
+    private IRateService rateService;
 
     public void createCurrency() {
         for (Utility.CurrencyCode currencyCode : Utility.CurrencyCode.values()) {
@@ -143,7 +147,13 @@ public class UpdateData {
             Set<Subscribe> subscribes = user.getSubscribes();
             StringBuilder sb = new StringBuilder();
             for (Subscribe subscribe : subscribes) {
+                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
+                        subscribe.getToCurrency().getCid());
 
+                boolean inRange = (currentValue >= subscribe.getMin() && currentValue <= subscribe.getMax());
+                if(inRange != subscribe.getInRange()){
+                    Utility.send(subscribe.getUser().getEmail(), "Notify: ");
+                }
             }
         }
     }
