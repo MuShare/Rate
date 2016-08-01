@@ -11,6 +11,7 @@ public class CurrencyBean {
     private String cid;
     private String code;
     private String icon;
+    private String name;
 
     public CurrencyBean(Currency currency){
         cid = currency.getCid();
@@ -31,5 +32,21 @@ public class CurrencyBean {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -34,7 +34,7 @@ import java.util.Set;
 public class UserService extends AbstractService<User> implements IUserService {
 	
 	@Resource(name="userDao")
-	private IUserDao dao;
+	private IUserDao userDao;
 
 	@Resource(name="currencyDao")
 	private ICurrencyDao currencyDao;
@@ -51,7 +51,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 	
 	@Override
 	protected IOperations<User> getDao(){
-		return this.dao;
+		return userDao;
 	}
 
 //	@Override
@@ -95,7 +95,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 	@Override
 	@RemoteMethod
 	public boolean login(String email, String password, HttpSession session) {
-		List<User> result = dao.queryList("email", email);
+		List<User> result = userDao.queryList("email", email);
 		if(result.size() == 0){
 			return false;
 		}else if(result.get(0).getPassword().equals(password)){
@@ -167,7 +167,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 		Subscribe subscribe = new Subscribe();
 		Currency currency = currencyDao.findOne(from);
 		Currency currencyTo = currencyDao.findOne(to);
-		User user = dao.findOne(userId);
+		User user = userDao.findOne(userId);
 		subscribe.setSname(sname);
 		subscribe.setUser(user);
 		subscribe.setCurrency(currency);
@@ -234,7 +234,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 		user.setTelephone(telephone);
 		user.setLoginDate(new Date());
 		user.setValidateCode(Utility.encode2hex(user.getEmail()));
-		this.dao.create(user);
+		this.userDao.create(user);
 		StringBuilder sb = new StringBuilder();
 		sb.append("<a href=\"http://localhost:8080/activate?validateCode=");
 		sb.append(user.getValidateCode());
