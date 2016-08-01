@@ -7,6 +7,8 @@ import edu.ut.softlab.rate.dao.common.AbstractHibernateDao;
 import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
 import org.directwebremoting.annotations.RemoteMethod;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 
 import java.text.SimpleDateFormat;
@@ -33,49 +35,6 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
             List<Rate> result = getCurrentSesstion().createQuery(hql).setString("date", date.toString()).list();
             return result;
         }else {
-            return null;
-        }
-    }
-
-    @Override
-    public ChartData getChartData(String start, String endDate, Currency inCurrency, Currency outCurrency) {
-
-        String hql = "from Rate where date >= :start and date <= :endDate and cid = :cid";
-
-        List<Rate> inCurrencyList = getCurrentSesstion().createQuery(hql).setString("start", start)
-                .setString("endDate", endDate)
-                .setString("cid", outCurrency.getCid())
-                .list();
-        List<Rate> outCurrencyList = getCurrentSesstion().createQuery(hql).setString("start", start)
-                .setString("endDate", endDate)
-                .setString("cid", inCurrency.getCid())
-                .list();
-        ChartData chartData = new ChartData();
-        chartData.setInCurrency(inCurrency.getCode());
-        chartData.setOutCurrency(outCurrency.getCode());
-        try{
-            Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
-            chartData.setTime(startDate.getTime()+32400000);
-        }catch (Exception ex){
-            System.out.println(ex.toString());
-        }
-
-        if(!inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
-            for(int i=0; i<inCurrencyList.size(); i++){
-                chartData.getData().add(Utility.round(outCurrencyList.get(i).getValue() / inCurrencyList.get(i).getValue(), 5));
-            }
-            return chartData;
-        }else if(!inCurrency.getCode().equals("USD") && outCurrency.getCode().equals("USD")){
-            for(int i=0; i<inCurrencyList.size(); i++){
-                chartData.getData().add(Utility.round(1/inCurrencyList.get(i).getValue(), 5));
-            }
-            return chartData;
-        }else if(inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
-            for(int i=0; i<outCurrencyList.size(); i++){
-                chartData.getData().add(outCurrencyList.get(i).getValue());
-            }
-            return chartData;
-        }else{
             return null;
         }
     }
@@ -110,5 +69,21 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
             chartData.getData().add(currencyRateList.get(i).getValue());
         }
         return chartData;
+    }
+
+    @Override
+    public List<Rate> getSpecificRateList(String start, String end, Currency currency) {
+        Date startDate = null;
+        Date endDate = null;
+        try{
+             startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
+             endDate = new SimpleDateFormat("yyyy-MM-dd").parse(end);
+        }catch (Exception ex){
+            System.out.println(ex.toString());
+        }
+        Criteria crit = getCurrentSesstion().createCriteria(Rate.class)
+                .add(Restrictions.eq("currency", currency))
+                .add(Restrictions.between("date", startDate, endDate));
+        return crit.list();
     }
 }

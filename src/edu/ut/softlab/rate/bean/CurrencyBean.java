@@ -1,5 +1,6 @@
 package edu.ut.softlab.rate.bean;
 
+import edu.ut.softlab.rate.model.Currency;
 import org.directwebremoting.annotations.DataTransferObject;
 
 /**
@@ -9,10 +10,11 @@ import org.directwebremoting.annotations.DataTransferObject;
 public class CurrencyBean {
     private String cid;
     private String code;
+    private String icon;
 
-    public CurrencyBean(String cid, String code){
-        this.cid = cid;
-        this.code = code;
+    public CurrencyBean(Currency currency){
+        cid = currency.getCid();
+        code = currency.getCode();
     }
 
     public String getCid() {

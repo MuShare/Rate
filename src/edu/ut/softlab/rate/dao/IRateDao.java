@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public interface IRateDao extends IOperations<Rate>{
     List<Rate> getLatestUpdateEntity();
-    ChartData getChartData(String start, String end, Currency inCurrency, Currency outCurrency);
     Rate getLatestCurrencyRate(Currency currency);
     ChartData getSpecificRate(String start, String end, Currency currency);
+    List<Rate> getSpecificRateList(String start, String end, Currency currency);
 }
