@@ -13,6 +13,9 @@ import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by alex on 16-4-17.
@@ -37,7 +40,36 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     public ChartData getHistoryRate(String start, String end, String inCurrencyId, String outCurrencyId) {
         Currency inCurrency = currencyDao.findOne(inCurrencyId);
         Currency outCurrency = currencyDao.findOne(outCurrencyId);
-        return this.dao.getChartData(start, end, inCurrency, outCurrency);
+        List<Rate> inCurrencyRateList = dao.getSpecificRateList(start, end, inCurrency);
+        List<Rate> outCurrencyRateList = dao.getSpecificRateList(start, end, outCurrency);
+        ChartData chartData = new ChartData();
+        chartData.setInCurrency(inCurrency.getCode());
+        chartData.setOutCurrency(outCurrency.getCode());
+        try{
+            Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
+            chartData.setTime(startDate.getTime()+32400000);
+        }catch (Exception ex){
+            System.out.println(ex.toString());
+        }
+
+        if(!inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
+            for(int i=0; i<inCurrencyRateList.size(); i++){
+                chartData.getData().add(Utility.round(inCurrencyRateList.get(i).getValue() / outCurrencyRateList.get(i).getValue(), 5));
+            }
+            return chartData;
+        }else if(!inCurrency.getCode().equals("USD") && outCurrency.getCode().equals("USD")){
+            for(int i=0; i<inCurrencyRateList.size(); i++){
+                chartData.getData().add(Utility.round(1/inCurrencyRateList.get(i).getValue(), 5));
+            }
+            return chartData;
+        }else if(inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
+            for(int i=0; i<outCurrencyRateList.size(); i++){
+                chartData.getData().add(outCurrencyRateList.get(i).getValue());
+            }
+            return chartData;
+        }else{
+            return null;
+        }
     }
 
     @Override

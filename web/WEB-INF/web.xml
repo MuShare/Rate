@@ -28,7 +28,7 @@
     <!-- 拦截匹配的请求，这里所有请求采用名字为mvc-dispatcher的DispatcherServlet处理 -->
     <servlet-mapping>
         <servlet-name>mvc-dispatcher</servlet-name>
-        <url-pattern>/api/</url-pattern>
+        <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

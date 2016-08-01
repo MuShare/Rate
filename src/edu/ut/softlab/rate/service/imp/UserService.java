@@ -195,8 +195,8 @@ public class UserService extends AbstractService<User> implements IUserService {
 			Rate fromCurrencyRate = rateDao.getLatestCurrencyRate(fromCurrency);
 			double current = Utility.round(fromCurrencyRate.getValue() / toCurrencyRate.getValue(), 5);
 			System.out.println(current);
-			SubscribeBean subscribeBean = new SubscribeBean(subscribe.getSid(), subscribe.getSname(),new CurrencyBean(subscribe.getCurrency().getCid(),subscribe.getCurrency().getCode()),
-					new CurrencyBean(subscribe.getToCurrency().getCid(),subscribe.getToCurrency().getCode()),user,subscribe.getMin(),subscribe.getMax(),subscribe.getIsEnable(),
+			SubscribeBean subscribeBean = new SubscribeBean(subscribe.getSid(), subscribe.getSname(),new CurrencyBean(subscribe.getCurrency()),
+					new CurrencyBean(subscribe.getToCurrency()),user,subscribe.getMin(),subscribe.getMax(),subscribe.getIsEnable(),
 							subscribe.getIsOnce(), subscribe.getIsSendEmail(), subscribe.getIsSendSms(),current);
 			result.add(subscribeBean);
 		}
