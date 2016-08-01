@@ -7,16 +7,20 @@ import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.dao.IRateDao;
 import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Rate;
+import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IRateService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Properties;
 
 
 /**
@@ -41,14 +45,22 @@ public class UpdateTest {
     @Autowired
     IRateDao rateDao;
 
+    @Autowired
+    ICurrencyService currencyService;
+
+
+    @Value("#{supplement}")
+    private Properties supplement;
+
+
     @Test
+    @Rollback(false)
     public void critTest(){
-        Currency currency = currencyDao.queryList("code", "CNY").get(0);
-        List<Rate> result = rateDao.getSpecificRateList("2014-10-10", "2015-10-10", currency);
-        for(Rate rate : result){
-            System.out.println(rate.getValue());
+        updateData.createCurrency();
+        updateData.updateRate();
+        for(Object s : supplement.values()){
+            System.out.println(s.toString());
+            java.util.Currency.getInstance(s.toString());
         }
     }
-
-
 }

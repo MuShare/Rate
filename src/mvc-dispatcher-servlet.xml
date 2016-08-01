@@ -7,6 +7,7 @@
        xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
        xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
         http://www.springframework.org/schema/context
@@ -16,7 +17,9 @@
         http://www.springframework.org/schema/tx
         http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
         http://www.springframework.org/schema/task
-         http://www.springframework.org/schema/task/spring-task-4.0.xsd
+        http://www.springframework.org/schema/task/spring-task-4.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd
         ">
 
 
@@ -43,11 +46,23 @@
         </property>
     </bean>
 
-    <mvc:resources location="/fonts/" mapping="/fonts/**"/>
-    <mvc:resources location="/css/" mapping="/css/**"/>
-    <mvc:resources location="/js/" mapping="/js/**"/>
-    <mvc:resources location="/img/" mapping="/img/**" />
+    <mvc:resources location="static/fonts/" mapping="/fonts/**"/>
+    <mvc:resources location="static/css/" mapping="/css/**"/>
+    <mvc:resources location="static/js/" mapping="/js/**"/>
+    <mvc:resources location="static/img/" mapping="/img/**" />
 
-    <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" />
-    <import resource="/dwr.xml" />
+    <!--<util:properties id="currency_zh_cn" location="static/resource/code.txt" />-->
+ <!--val-->
+    <!--<beans:bean id="nameOfYourPropsVar" class="org.springframework.beans.factory.config.PropertiesFactoryBean">-->
+        <!--<beans:property name="location" value="classpath:${yourPropFileName}"/>-->
+        <!--<beans:property name="fileEncoding" value="UTF-8"/>-->
+    <!--</beans:bean>-->
+
+    <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="supplement">
+        <property name="location" value="classpath:supplement.properties"/>
+        <property name="fileEncoding" value="UTF-8"/>
+    </bean>
+
+    <!--<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" />-->
+    <!--<import resource="/dwr.xml" />-->
 </beans>

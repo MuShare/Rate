@@ -24,14 +24,15 @@ import java.util.List;
 @RemoteProxy
 public class RateService extends AbstractService<Rate> implements IRateService {
     @Resource(name="rateDao")
-    private IRateDao dao;
+    private IRateDao rateDao;
 
     @Resource(name="currencyDao")
     private ICurrencyDao currencyDao;
 
     @Override
     protected IOperations<Rate> getDao() {
-        return this.dao;
+
+        return rateDao;
     }
 
 
@@ -40,8 +41,8 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     public ChartData getHistoryRate(String start, String end, String inCurrencyId, String outCurrencyId) {
         Currency inCurrency = currencyDao.findOne(inCurrencyId);
         Currency outCurrency = currencyDao.findOne(outCurrencyId);
-        List<Rate> inCurrencyRateList = dao.getSpecificRateList(start, end, inCurrency);
-        List<Rate> outCurrencyRateList = dao.getSpecificRateList(start, end, outCurrency);
+        List<Rate> inCurrencyRateList = rateDao.getSpecificRateList(start, end, inCurrency);
+        List<Rate> outCurrencyRateList = rateDao.getSpecificRateList(start, end, outCurrency);
         ChartData chartData = new ChartData();
         chartData.setInCurrency(inCurrency.getCode());
         chartData.setOutCurrency(outCurrency.getCode());
@@ -78,8 +79,8 @@ public class RateService extends AbstractService<Rate> implements IRateService {
         Currency toCurrency = currencyDao.findOne(fromCurrencyCid);
         Currency fromCurrency = currencyDao.findOne(toCurrencyCid);
         if(fromCurrency != null && toCurrency != null){
-            Rate fromRate = dao.getLatestCurrencyRate(fromCurrency);
-            Rate toRate = dao.getLatestCurrencyRate(toCurrency);
+            Rate fromRate = rateDao.getLatestCurrencyRate(fromCurrency);
+            Rate toRate = rateDao.getLatestCurrencyRate(toCurrency);
             if (fromRate != null && toRate != null){
                 return Utility.round(fromRate.getValue()/toRate.getValue(),5);
             }else if(fromRate == null){
@@ -95,7 +96,7 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     @RemoteMethod
     public ChartData getSpecificRate(String start, String end, String currencyCid) {
         Currency currency = currencyDao.findOne(currencyCid);
-        return dao.getSpecificRate(start, end,currency);
+        return rateDao.getSpecificRate(start, end,currency);
     }
 }
 

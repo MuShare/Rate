@@ -23,7 +23,7 @@ public class CurrencyService  extends AbstractService<Currency> implements ICurr
 
     @Override
     protected IOperations<Currency> getDao() {
-        return this.getDao();
+        return currencyDao;
     }
 
     @Override
