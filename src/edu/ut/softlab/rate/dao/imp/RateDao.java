@@ -8,6 +8,7 @@ import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 
@@ -71,19 +72,14 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
         return chartData;
     }
 
+
+
     @Override
-    public List<Rate> getSpecificRateList(String start, String end, Currency currency) {
-        Date startDate = null;
-        Date endDate = null;
-        try{
-             startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
-             endDate = new SimpleDateFormat("yyyy-MM-dd").parse(end);
-        }catch (Exception ex){
-            System.out.println(ex.toString());
-        }
+    public List<Rate> getSpecificRateList(Date startDate, Date endDate, Currency currency) {
         Criteria crit = getCurrentSesstion().createCriteria(Rate.class)
                 .add(Restrictions.eq("currency", currency))
-                .add(Restrictions.between("date", startDate, endDate));
+                .add(Restrictions.between("date", startDate, endDate))
+                .addOrder(Order.asc("date"));
         return crit.list();
     }
 }

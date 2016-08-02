@@ -17,7 +17,13 @@ import java.util.*;
  */
 public class Main {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+        System.out.println(Utility.getUtility().svgToString("web/static/img/flags/ad.svg"));
+
+
+
+
+
 //        File file = new File("src/code.txt");
 //        InputStreamReader reader = null;
 //        try{
@@ -43,64 +49,63 @@ public class Main {
 //        }
 
 
-
-        Currency currency = java.util.Currency.getInstance("USD");
-
-
-
-
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet("http://country.io/names.json");
-        Map<String, Set<String>> result = new HashMap<>();
-        try{
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-            HttpEntity entity = response.getEntity();
-            InputStream is = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while((line = reader.readLine()) != null){
-                sb.append(line);
-            }
-
-
-
-            File writeName = new File("src/a");
-            BufferedWriter out = new BufferedWriter(new FileWriter(writeName));
-
-
-
-
-
-
-            JSONObject jsonObject = new JSONObject(sb.toString());
-            for(String key : jsonObject.keySet()){
-                if(result.containsKey(key)){
-                    result.get(key).add(jsonObject.getString(key));
-                }else {
-                    Set<String> set = new HashSet<>();
-                    set.add(jsonObject.getString(key));
-                    result.put(key, set);
-                }
-                System.out.println(jsonObject.getString(key));
-            }
-            for(String key : result.keySet()){
-                StringBuilder sB = new StringBuilder();
-                sB.append(key+" =");
-                for(String country:result.get(key)){
-                    sB.append(" "+country);
-                }
-                out.write(sB.toString());
-                out.newLine();
-                out.flush();
-            }
-            out.close();
-
-            EntityUtils.consume(entity);
-            response.close();
-        }catch (Exception ex){
-            System.out.println(ex.toString());
-        }
-
+//        Currency currency = java.util.Currency.getInstance("USD");
+//
+//
+//
+//
+//        CloseableHttpClient httpClient = HttpClients.createDefault();
+//        HttpGet httpGet = new HttpGet("http://country.io/names.json");
+//        Map<String, Set<String>> result = new HashMap<>();
+//        try{
+//            CloseableHttpResponse response = httpClient.execute(httpGet);
+//            HttpEntity entity = response.getEntity();
+//            InputStream is = entity.getContent();
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+//            StringBuilder sb = new StringBuilder();
+//            String line;
+//            while((line = reader.readLine()) != null){
+//                sb.append(line);
+//            }
+//
+//
+//
+//            File writeName = new File("src/a");
+//            BufferedWriter out = new BufferedWriter(new FileWriter(writeName));
+//
+//
+//
+//
+//
+//
+//            JSONObject jsonObject = new JSONObject(sb.toString());
+//            for(String key : jsonObject.keySet()){
+//                if(result.containsKey(key)){
+//                    result.get(key).add(jsonObject.getString(key));
+//                }else {
+//                    Set<String> set = new HashSet<>();
+//                    set.add(jsonObject.getString(key));
+//                    result.put(key, set);
+//                }
+//                System.out.println(jsonObject.getString(key));
+//            }
+//            for(String key : result.keySet()){
+//                StringBuilder sB = new StringBuilder();
+//                sB.append(key+" =");
+//                for(String country:result.get(key)){
+//                    sB.append(" "+country);
+//                }
+//                out.write(sB.toString());
+//                out.newLine();
+//                out.flush();
+//            }
+//            out.close();
+//
+//            EntityUtils.consume(entity);
+//            response.close();
+//        }catch (Exception ex){
+//            System.out.println(ex.toString());
+//        }
+//
     }
 }

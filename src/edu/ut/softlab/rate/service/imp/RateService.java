@@ -14,6 +14,7 @@ import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,19 +40,23 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     @Override
     @RemoteMethod
     public ChartData getHistoryRate(String start, String end, String inCurrencyId, String outCurrencyId) {
+        ChartData chartData = new ChartData();
         Currency inCurrency = currencyDao.findOne(inCurrencyId);
         Currency outCurrency = currencyDao.findOne(outCurrencyId);
-        List<Rate> inCurrencyRateList = rateDao.getSpecificRateList(start, end, inCurrency);
-        List<Rate> outCurrencyRateList = rateDao.getSpecificRateList(start, end, outCurrency);
-        ChartData chartData = new ChartData();
-        chartData.setInCurrency(inCurrency.getCode());
-        chartData.setOutCurrency(outCurrency.getCode());
+        Date startDate=null, endDate=null;
         try{
-            Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
-            chartData.setTime(startDate.getTime()+32400000);
+            startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
+            endDate = new SimpleDateFormat("yyyy-MM-dd").parse(end);
+            chartData.setTime(startDate.getTime());
         }catch (Exception ex){
             System.out.println(ex.toString());
         }
+        List<Rate> inCurrencyRateList = rateDao.getSpecificRateList(startDate, endDate, inCurrency);
+        List<Rate> outCurrencyRateList = rateDao.getSpecificRateList(startDate, endDate, outCurrency);
+
+        chartData.setInCurrency(inCurrency.getCode());
+        chartData.setOutCurrency(outCurrency.getCode());
+
 
         if(!inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
             for(int i=0; i<inCurrencyRateList.size(); i++){
@@ -72,6 +77,7 @@ public class RateService extends AbstractService<Rate> implements IRateService {
             return null;
         }
     }
+
 
     @Override
     @RemoteMethod
@@ -97,6 +103,19 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     public ChartData getSpecificRate(String start, String end, String currencyCid) {
         Currency currency = currencyDao.findOne(currencyCid);
         return rateDao.getSpecificRate(start, end,currency);
+    }
+
+    @Override
+    public ChartData getSpecificRate(Date start, Date end, Currency currency){
+        ChartData chartData = new ChartData();
+        List<Rate> rateList = rateDao.getSpecificRateList(start, end, currency);
+        List<Double> rateValues = new ArrayList<>();
+        for(Rate rate : rateList){
+            rateValues.add(rate.getValue());
+        }
+        chartData.setData(rateValues);
+        chartData.setTime(start.getTime());
+        return chartData;
     }
 }
 

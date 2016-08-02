@@ -67,11 +67,15 @@ public class UpdateData {
                 String currencyCodeStr = currencyCode.toString();
                 if (!currencyCodeStr.equals("USD")) {
                     ArrayList<String> result = Utility.getUtility().postData(latestUpdate, currencyCodeStr);
+                    System.out.println(result.size());
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
                     double preRate = 0;
                     Date preDate = latestUpdate;
 
                     for (int i = 2; i < result.size() - 1; i++) {
+                        if(currencyCodeStr.equals("CNY")){
+                            System.out.println(result.get(i));
+                        }
                         Rate rate = new Rate();
                         rate.setCurrency(currency);
                         String[] data = result.get(i).split(" ");
@@ -98,9 +102,8 @@ public class UpdateData {
                             preDate = rate.getDate();
                             preRate = rate.getValue();
                         } catch (Exception ex) {
-                            System.out.println("date error"+ currencyCodeStr);
+                            System.out.println("date error "+ currencyCodeStr);
                         }
-
                     }
                 }
             }
