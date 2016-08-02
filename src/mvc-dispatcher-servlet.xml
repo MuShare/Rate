@@ -63,6 +63,17 @@
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 
+    <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="currency_country">
+        <property name="location" value="static/resource/currency_country.properties"/>
+        <property name="fileEncoding" value="UTF-8"/>
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="code_country">
+        <property name="location" value="static/resource/code_country_name.properties"/>
+        <property name="fileEncoding" value="UTF-8"/>
+    </bean>
+
+
     <!--<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" />-->
     <!--<import resource="/dwr.xml" />-->
 </beans>

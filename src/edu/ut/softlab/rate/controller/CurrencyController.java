@@ -26,6 +26,10 @@ public class CurrencyController {
     @Resource(name = "currencyService")
     private ICurrencyService currencyService;
 
+    @Value("#{currency_country}")
+    private Properties currencyCountry;
+
+    private final String flagPath = "static/img/flags";
 
     @RequestMapping(value="", method = RequestMethod.GET)
     public ResponseEntity<List<CurrencyBean>> getCurrencies(@RequestParam(value="cid", required = false) String cid,
@@ -35,6 +39,7 @@ public class CurrencyController {
             List<Currency> currencyList = currencyService.getCurrencyList();
             for(Currency currency : currencyList){
                 CurrencyBean currencyBean = new CurrencyBean(currency);
+                currencyBean.setIcon(flagPath+currencyCountry.get(currency.getCode()).toString().toLowerCase()+".png");
                 System.out.println(currency.getCode());
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
                 result.add(currencyBean);
@@ -46,6 +51,7 @@ public class CurrencyController {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }else {
                 CurrencyBean currencyBean = new CurrencyBean(currency);
+                currencyBean.setIcon(flagPath+currencyCountry.get(currency.getCode()).toString().toLowerCase()+".png");
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
                 result.add(currencyBean);
                 return new ResponseEntity<>(result, HttpStatus.OK);
