@@ -59,17 +59,17 @@
     <!--</beans:bean>-->
 
     <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="supplement">
-        <property name="location" value="classpath:supplement.properties"/>
+        <property name="location" value="classpath:rate_supplement.properties"/>
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 
     <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="currency_country">
-        <property name="location" value="static/resource/currency_country.properties"/>
+        <property name="location" value="classpath:rate_currency_country.properties"/>
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 
     <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="code_country">
-        <property name="location" value="static/resource/code_country_name.properties"/>
+        <property name="location" value="classpath:rate_code_country_name.properties"/>
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 

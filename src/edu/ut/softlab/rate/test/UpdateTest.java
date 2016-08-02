@@ -55,12 +55,9 @@ public class UpdateTest {
 
     @Test
     @Rollback(false)
+    @Transactional
     public void critTest(){
         updateData.createCurrency();
         updateData.updateRate();
-        for(Object s : supplement.values()){
-            System.out.println(s.toString());
-            java.util.Currency.getInstance(s.toString());
-        }
     }
 }

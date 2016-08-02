@@ -16,5 +16,5 @@ public interface IRateDao extends IOperations<Rate>{
     List<Rate> getLatestUpdateEntity();
     Rate getLatestCurrencyRate(Currency currency);
     ChartData getSpecificRate(String start, String end, Currency currency);
-    List<Rate> getSpecificRateList(String start, String end, Currency currency);
+    List<Rate> getSpecificRateList(Date start, Date end, Currency currency);
 }

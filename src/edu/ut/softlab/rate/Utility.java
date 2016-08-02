@@ -19,12 +19,11 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -247,5 +246,25 @@ public class Utility {
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
+    }
+
+    public static String svgToString(String path){
+        File file = new File(path);
+        InputStreamReader reader = null;
+        StringBuilder sb = new StringBuilder();
+        try{
+            reader = new InputStreamReader(new FileInputStream(file));
+            BufferedReader br = new BufferedReader(reader);
+            String line = br.readLine();
+
+            while(line != null){
+                sb.append(line);
+                line = br.readLine();
+            }
+
+        }catch(Exception ex){
+            System.out.println(ex.toString());
+        }
+        return sb.toString();
     }
 }
