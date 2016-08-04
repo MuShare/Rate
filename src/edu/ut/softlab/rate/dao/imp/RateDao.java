@@ -8,8 +8,7 @@ import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.*;
 import org.springframework.stereotype.Repository;
 
 import java.text.SimpleDateFormat;
@@ -27,28 +26,34 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
 
 
     @Override
-    public List<Rate> getLatestUpdateEntity() {
-        String dateHQL = "select max(date) from Rate";
-        List dateList = getCurrentSesstion().createQuery(dateHQL).list();
-        Date date = (Date)dateList.get(0);
-        String hql = "from Rate where date = :date";
-        if(date != null){
-            List<Rate> result = getCurrentSesstion().createQuery(hql).setString("date", date.toString()).list();
-            return result;
-        }else {
-            return null;
-        }
+    public List<Rate> getLatestRates() {
+//        String dateHQL = "select max(date) from Rate";
+//        List dateList = getCurrentSesstion().createQuery(dateHQL).list();
+//        Date date = (Date)dateList.get(0);
+//        String hql = "from Rate where date = :date";
+//
+//        if(date != null){
+//            List<Rate> result = getCurrentSesstion().createQuery(hql).setString("date", date.toString()).list();
+//            return result;
+//        }else {
+//            return null;
+//        }
+
+        DetachedCriteria maxDate = DetachedCriteria.forClass(Rate.class)
+                .setProjection(Projections.max("date"));
+        Criteria criteria = getCurrentSesstion().createCriteria(Rate.class)
+                .add(Property.forName("date").eq(maxDate));
+        return criteria.list();
     }
 
     @Override
     public Rate getLatestCurrencyRate(Currency currency) {
-        List<Rate> currentRates = getLatestUpdateEntity();
-        for(Rate currentRate : currentRates){
-            if(currentRate.getCurrency().getCid().equals(currency.getCid())){
-                return currentRate;
-            }
-        }
-        return null;
+        DetachedCriteria maxDate = DetachedCriteria.forClass(Rate.class)
+                .setProjection(Projections.max("date"));
+        Criteria criteria1 = getCurrentSesstion().createCriteria(Rate.class);
+        criteria1.add(Restrictions.eq("currency", currency))
+                .add(Property.forName("date").eq(maxDate));
+        return (Rate)criteria1.uniqueResult();
     }
 
     @Override

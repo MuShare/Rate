@@ -31,4 +31,14 @@ public class CurrencyService  extends AbstractService<Currency> implements ICurr
     public List<Currency> getCurrencyList() {
         return currencyDao.findAll();
     }
+
+    @Override
+    public List<Currency> getUpdatedCurrencies(int rev) {
+        return currencyDao.getUpdatedCurrencies(rev);
+    }
+
+    @Override
+    public int getCurrentRevision() {
+        return currencyDao.getCurrentRev();
+    }
 }

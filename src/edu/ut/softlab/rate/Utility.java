@@ -45,11 +45,12 @@ public class Utility {
         return utility;
     }
 
-    public static final String HOST = "smtp.163.com";
+    //smtp.163.com
+    public static final String HOST = "mushare.cn";
     public static final String PROTOCOL = "smtp";
     public static final int PORT = 25;
-    public static final String FROM = "quickrateregister@163.com";//发件人的email
-    public static final String PWD = "helloworld123";//发件人密码
+    public static final String FROM = "rate";//发件人的email
+    public static final String PWD = "123";//发件人密码
     private static Session getSession() {
         Properties props = new Properties();
         props.put("mail.smtp.host", HOST);//设置服务器地址
@@ -63,7 +64,6 @@ public class Utility {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(FROM, PWD);
             }
-
         };
         return Session.getDefaultInstance(props , authenticator);
     }
@@ -79,7 +79,7 @@ public class Utility {
             msg.setFrom(new InternetAddress(FROM));
             InternetAddress[] address = {new InternetAddress(toEmail)};
             msg.setRecipients(Message.RecipientType.TO, address);
-            msg.setSubject("账号激活邮件");
+            msg.setSubject("Active your email");
             msg.setSentDate(new Date());
             msg.setContent(content , "text/html;charset=utf-8");
 
@@ -98,13 +98,11 @@ public class Utility {
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.reset();
             md.update(source.getBytes("UTF-8"));
+            md.update(Long.toString(System.currentTimeMillis()).getBytes());
             result = md.digest();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        } catch (Exception ex){
+            System.out.println(ex.toString());
         }
-
         return result;
     }
 
@@ -113,7 +111,7 @@ public class Utility {
      * @param source
      * @return
      */
-    public static String encode2hex(String source) {
+    public static String getToken(String source) {
         byte[] data = encode2bytes(source);
 
         StringBuffer hexString = new StringBuffer();
@@ -130,21 +128,9 @@ public class Utility {
         return hexString.toString();
     }
 
-    /**
-     * 验证字符串是否匹配
-     * @param unknown 待验证的字符串
-     * @param okHex 使用MD5加密过的16进制字符串
-     * @return  匹配返回true，不匹配返回false
-     */
-    public static boolean validate(String unknown , String okHex) {
-        return okHex.equals(encode2hex(unknown));
-    }
 
 
-
-
-
-    public ArrayList<String> postData(Date date, String currencyCode){
+    public static ArrayList<String> postData(Date date, String currencyCode){
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost("http://fx.sauder.ubc.ca/cgi/fxdata");
         if(date == null){
@@ -189,7 +175,7 @@ public class Utility {
         return result;
     }
 
-    public Map<String, Double> getRateData(){
+    public static Map<String, Double> getRateData(){
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet("http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json");
         Map<String, Double> result = new HashMap<>();

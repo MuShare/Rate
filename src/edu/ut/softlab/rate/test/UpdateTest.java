@@ -1,6 +1,7 @@
 package edu.ut.softlab.rate.test;
 
 
+import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.component.UpdateData;
 import edu.ut.softlab.rate.controller.RateController;
 import edu.ut.softlab.rate.dao.ICurrencyDao;
@@ -57,7 +58,17 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void critTest(){
-        updateData.createCurrency();
-        updateData.updateRate();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("please click the following url to validate your email address,please click " +
+                "the following url to validate your email address," +
+                "please click the following url to validate your email address" +
+                "please click the following url to validate your email address" +
+                "please click the following url to validate your email address" +
+                "please click the following url to validate your email address");
+        sb.append("href=\"http://localhost:8080/api/user/activate?validateCode=");
+        sb.append("&uid=");
+        sb.append("");
+        Utility.send("alexlai@softlab.cs.tsukuba.ac.jp", sb.toString());
     }
 }

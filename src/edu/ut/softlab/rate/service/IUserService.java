@@ -25,5 +25,7 @@ public interface IUserService extends IOperations<User> {
     boolean login(String email, String password, HttpSession session);
     boolean editSubscribe(String subscribeSid, String fromCurrencyCid, String toCurrencyCid, String sname, double min, double max, boolean isEnable, boolean isOnce, boolean isSendEmail, boolean isSendSms);
     boolean deleteSuscribe(String subscribeSid);
+    boolean Validate(String uid, String validateCode);
+    String mobileLogin(String email, String password, String deviceToken, String os, String ip);
 }
 

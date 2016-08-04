@@ -60,7 +60,7 @@ public class RateService extends AbstractService<Rate> implements IRateService {
 
         if(!inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
             for(int i=0; i<inCurrencyRateList.size(); i++){
-                chartData.getData().add(Utility.round(inCurrencyRateList.get(i).getValue() / outCurrencyRateList.get(i).getValue(), 5));
+                chartData.getData().add(Utility.round(outCurrencyRateList.get(i).getValue() / inCurrencyRateList.get(i).getValue(), 5));
             }
             return chartData;
         }else if(!inCurrency.getCode().equals("USD") && outCurrency.getCode().equals("USD")){
@@ -116,6 +116,21 @@ public class RateService extends AbstractService<Rate> implements IRateService {
         chartData.setData(rateValues);
         chartData.setTime(start.getTime());
         return chartData;
+    }
+
+    @Override
+    public double getCurrentRate(Currency currency) {
+        if(currency.getCode().equals("USD")){
+            return 1.0;
+        }else {
+            Rate rate = rateDao.getLatestCurrencyRate(currency);
+            return rate.getValue();
+        }
+    }
+
+    @Override
+    public List<Rate> getLatestRates() {
+        return rateDao.getLatestRates();
     }
 }
 

@@ -1,6 +1,7 @@
 package edu.ut.softlab.rate.bean;
 
 import org.directwebremoting.annotations.DataTransferObject;
+import edu.ut.softlab.rate.model.*;
 
 import java.util.Date;
 
@@ -19,6 +20,13 @@ public class UserBean {
         this.sname = sname;
         this.email = email;
         this.password = password;
+    }
+
+    public UserBean(User user){
+        this.uid = user.getUid();
+        this.sname = user.getUname();
+        this.email = user.getEmail();
+        this.password = user.getPassword();
     }
 
 
