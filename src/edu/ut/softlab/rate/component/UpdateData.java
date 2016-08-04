@@ -10,6 +10,7 @@ import edu.ut.softlab.rate.model.Rate;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.model.User;
 import edu.ut.softlab.rate.service.IRateService;
+import edu.ut.softlab.rate.service.imp.RateService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -53,20 +54,19 @@ public class UpdateData {
         }
     }
 
-    @Scheduled(cron = "0 */1 * * * ?") //每天十二点更新
+    @Scheduled(cron = "0 */1 * * * ?") //每分钟更新
     @Transactional
     public void updateRate() {
-        System.out.println("hello");
-        List<Rate> latestData = rateDao.getLatestUpdateEntity();
+        List<Rate> latestRates = rateService.getLatestRates();
         Date latestUpdate;
         Calendar cl = Calendar.getInstance();
 
-        if (latestData == null) {
+        if (latestRates.size() == 0) {
             latestUpdate = new GregorianCalendar(2013, 0, 0).getTime();
             for (Object currencyCode : supplement.values()) {
                 String currencyCodeStr = currencyCode.toString();
                 if (!currencyCodeStr.equals("USD")) {
-                    ArrayList<String> result = Utility.getUtility().postData(latestUpdate, currencyCodeStr);
+                    ArrayList<String> result = Utility.postData(latestUpdate, currencyCodeStr);
                     System.out.println(result.size());
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
                     double preRate = 0;
@@ -93,7 +93,6 @@ public class UpdateData {
                                     cl.add(Calendar.DATE, j + 1);
                                     voidRate.setDate(cl.getTime());
                                     rateDao.create(voidRate);
-                                   // System.out.println(voidRate.getDate());
                                 }
                             }
                             rate.setDate(date);
@@ -107,51 +106,45 @@ public class UpdateData {
                     }
                 }
             }
-            //當天的無法獲取 所以再次調用一次雅虎的api
-            Map<String, Double> todayRate = Utility.getUtility().getRateData();
-            System.out.println(todayRate);
-            for (Object currencyCode : supplement.values()) {
-                String currencyCodeStr = currencyCode.toString();
+            //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
+            updateOrCreateCurrentRate(rateService);
+        } else {
+            updateOrCreateCurrentRate(rateService);
+        }
+    }
+
+    /**
+     * 通过雅虎api更新或者创建新的Rate记录
+     * @param rateService rateservice
+     */
+    public void updateOrCreateCurrentRate(IRateService rateService){
+        Map<String, Double> todayRate = Utility.getRateData();
+        List<Rate> latestRates = rateService.getLatestRates();
+
+        System.out.println(latestRates.get(0).getDate());
+        System.out.println(new Date());
+
+        if (latestRates.get(0).getDate().toString().
+                equals(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {
+            System.out.println("yahoo update");
+            for (Rate rate : latestRates) {
+                rate.setValue(todayRate.get("USD/" + rate.getCurrency().getCode()));
+                rateDao.update(rate);
+            }
+        } else {
+            for (Rate rate : latestRates) {
+                String currencyCodeStr = rate.getCurrency().getCode();
                 if (!currencyCodeStr.equals("USD")) {
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
                     if(todayRate.containsKey("USD/" + currencyCodeStr)){
                         double rateValue = todayRate.get("USD/" + currencyCodeStr);
-                        Rate rate = new Rate();
-                        rate.setCurrency(currency);
-                        rate.setValue(rateValue);
-                        rate.setDate(new Date());
-                        rateDao.create(rate);
+                        Rate currentRate = new Rate();
+                        currentRate.setCurrency(currency);
+                        currentRate.setValue(rateValue);
+                        currentRate.setDate(new Date());
+                        rateService.create(currentRate);
                     }else {
                         System.out.println(currencyCodeStr);
-                    }
-
-                }
-            }
-        } else {
-            Map<String, Double> todayRate = Utility.getUtility().getRateData();
-            List<Rate> latestRate = rateDao.getLatestUpdateEntity();
-            if (latestRate.get(0).getDate().toString().
-                    equals(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {
-                System.out.println("update");
-                for (Rate rate : latestRate) {
-                    rate.setValue(todayRate.get("USD/" + rate.getCurrency().getCode()));
-                    rateDao.update(rate);
-                }
-            } else {
-                for (Object currencyCode : supplement.values()) {
-                    String currencyCodeStr = currencyCode.toString();
-                    if (!currencyCodeStr.equals("USD")) {
-                        Currency currency = dao.queryList("code", currencyCodeStr).get(0);
-                        if(todayRate.containsKey("USD/" + currencyCodeStr)){
-                            double rateValue = todayRate.get("USD/" + currencyCodeStr);
-                            Rate rate = new Rate();
-                            rate.setCurrency(currency);
-                            rate.setValue(rateValue);
-                            rate.setDate(new Date());
-                            rateDao.create(rate);
-                        }else {
-                            System.out.println(currencyCodeStr);
-                        }
                     }
                 }
             }

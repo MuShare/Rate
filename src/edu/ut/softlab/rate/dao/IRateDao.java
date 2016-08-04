@@ -13,7 +13,7 @@ import java.util.Map;
  * Created by alex on 16-4-11.
  */
 public interface IRateDao extends IOperations<Rate>{
-    List<Rate> getLatestUpdateEntity();
+    List<Rate> getLatestRates();
     Rate getLatestCurrencyRate(Currency currency);
     ChartData getSpecificRate(String start, String end, Currency currency);
     List<Rate> getSpecificRateList(Date start, Date end, Currency currency);

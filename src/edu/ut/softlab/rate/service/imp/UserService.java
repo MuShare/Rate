@@ -7,27 +7,18 @@ import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.bean.CurrencyBean;
 import edu.ut.softlab.rate.bean.SubscribeBean;
 import edu.ut.softlab.rate.bean.UserBean;
-import edu.ut.softlab.rate.dao.ICurrencyDao;
-import edu.ut.softlab.rate.dao.IRateDao;
-import edu.ut.softlab.rate.dao.ISubscribe;
+import edu.ut.softlab.rate.dao.*;
 import edu.ut.softlab.rate.dao.common.IOperations;
-import edu.ut.softlab.rate.dao.IUserDao;
-import edu.ut.softlab.rate.model.Currency;
-import edu.ut.softlab.rate.model.Rate;
-import edu.ut.softlab.rate.model.Subscribe;
+import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.service.IUserService;
 import edu.ut.softlab.rate.service.common.AbstractService;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.stereotype.Service;
 
-import edu.ut.softlab.rate.model.User;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Service("userService")
 @RemoteProxy
@@ -40,10 +31,13 @@ public class UserService extends AbstractService<User> implements IUserService {
 	private ICurrencyDao currencyDao;
 
 	@Resource(name="subscribeDao")
-	private ISubscribe subscribeDao;
+	private ISubscribeDao subscribeDao;
 
 	@Resource(name = "rateDao")
 	private IRateDao rateDao;
+
+	@Resource(name = "deviceDao")
+	private IDeviceDao deviceDao;
 	
 	public UserService(){
 		super();
@@ -70,27 +64,41 @@ public class UserService extends AbstractService<User> implements IUserService {
 //		return user.getUid();
 //	}
 //
-//	@Override
-//	public boolean Validate(String uid, String validateCode) {
-//		User user = this.dao.findOne(uid);
-//		if(user != null){
-//			return user.getValidateCode().equals(validateCode);
-//		}else {
-//			return false;
-//		}
-//	}
-//
-//	@Override
-//	public User Login(User user) {
-//		List<User> result = dao.queryList("email", user.getEmail());
-//		if(result.size() == 0){
-//			return null;
-//		}else if(result.get(0).getPassword().equals(user.getPassword())){
-//			return result.get(0);
-//		}
-//		return null;
-//	}
+	@Override
+	public boolean Validate(String uid, String validateCode) {
+		User user = userDao.findOne(uid);
+		if(user != null){
+			if(user.getValidateCode().equals(validateCode)){
+				user.setStatus(true);
+				return true;
+			}else {
+				return false;
+			}
+		}else {
+			return false;
+		}
+	}
 
+	@Override
+	public String mobileLogin(String email, String password, String deviceToken, String os, String ip) {
+		List<User> users = userDao.queryList("email", email);
+		if(users.size() == 0){
+			return null;
+		}else if(users.get(0).getPassword().equals(password)){
+			Device device = new Device();
+			device.setDeviceToken(deviceToken);
+			device.setLastLoginTime(new Date());
+			String token = Utility.getToken(email);
+			device.setLoginToken(token);
+			device.setLastLoginIp(ip);
+			device.setUser(users.get(0));
+			device.setOsVersion(os);
+			deviceDao.create(device);
+			return Utility.getToken(email);
+		}else {
+			return null;
+		}
+	}
 
 	@Override
 	@RemoteMethod
@@ -106,6 +114,8 @@ public class UserService extends AbstractService<User> implements IUserService {
 		}
 		return false;
 	}
+
+
 
 	@Override
 	@RemoteMethod
@@ -233,16 +243,29 @@ public class UserService extends AbstractService<User> implements IUserService {
 		user.setEmail(email);
 		user.setTelephone(telephone);
 		user.setLoginDate(new Date());
-		user.setValidateCode(Utility.encode2hex(user.getEmail()));
+		user.setValidateCode(Utility.getToken(user.getEmail()));
 		this.userDao.create(user);
 		StringBuilder sb = new StringBuilder();
-		sb.append("<a href=\"http://localhost:8080/activate?validateCode=");
+		sb.append("please click the following url to validate your email address,please click \n");
+		sb.append("href=\"http://rate.mushare.cn/api/user/activate?validateCode=");
 		sb.append(user.getValidateCode());
 		sb.append("&uid=");
 		sb.append(user.getUid());
-		sb.append("</a>");
-		sb.append("在发送邮件的时候，遇到系统退信的情况，后来分析发现是由于中文字符太少，url太长，被邮件系统过滤掉了，加一些汉字和内容就好了；　或者考虑使用企业邮箱");
-		Utility.send(user.getEmail(), sb.toString());
+		Thread sendMail = new Thread(new SendMail(user.getEmail(), sb.toString()));
+		sendMail.start();
 		return user.getUid();
+	}
+
+	private class SendMail implements Runnable{
+		private String email;
+		private String content;
+		public SendMail(String email, String content){
+			this.email = email;
+			this.content = content;
+		}
+		@Override
+		public void run() {
+			Utility.send(email, content);
+		}
 	}
 }

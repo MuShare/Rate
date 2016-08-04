@@ -6,6 +6,7 @@ import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Rate;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by alex on 16-4-17.
@@ -15,4 +16,6 @@ public interface IRateService extends IOperations<Rate> {
     double getCurrentRate(String fromCurrency, String toCurrency);
     ChartData getSpecificRate(String start, String end, String currencyCid);
     ChartData getSpecificRate(Date start, Date end, Currency currency);
+    double getCurrentRate(Currency currency);
+    List<Rate> getLatestRates();
 }

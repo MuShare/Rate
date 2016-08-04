@@ -1,6 +1,6 @@
 package edu.ut.softlab.rate.model;
 
-import org.directwebremoting.annotations.DataTransferObject;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
@@ -40,14 +40,37 @@ public class User implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private Date loginDate;
 
-	@OneToMany(mappedBy = "user")
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private Set<Subscribe> subscribes;
+
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private Set<Favorite> favorites;
 
 	@Column(name="status")
 	private Boolean status;
 
 	@Column(name="validatecode", length = 225)
 	private String validateCode;
+
+	@Column(name = "favorite_revision")
+	private Integer favoriteRevision;
+
+	public Set<Favorite> getFavorites() {
+		return favorites;
+	}
+
+	public void setFavorites(Set<Favorite> favorites) {
+		this.favorites = favorites;
+	}
+
+	public Integer getFavoriteRevision() {
+		return favoriteRevision;
+	}
+
+	public void setFavoriteRevision(Integer favoriteRevision) {
+		this.favoriteRevision = favoriteRevision;
+	}
 
 	public String getValidateCode() {
 		return validateCode;

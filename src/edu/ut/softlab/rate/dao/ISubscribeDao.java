@@ -6,5 +6,5 @@ import edu.ut.softlab.rate.model.Subscribe;
 /**
  * Created by alex on 16-4-11.
  */
-public interface ISubscribe extends IOperations<Subscribe> {
+public interface ISubscribeDao extends IOperations<Subscribe> {
 }

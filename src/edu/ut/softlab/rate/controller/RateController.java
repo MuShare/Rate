@@ -1,16 +1,17 @@
 package edu.ut.softlab.rate.controller;
 
 
+import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.bean.ChartData;
+import edu.ut.softlab.rate.bean.RateResultBean;
+import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
-import edu.ut.softlab.rate.model.Rate;
 import edu.ut.softlab.rate.service.ICurrencyService;
+import edu.ut.softlab.rate.service.IDeviceService;
 import edu.ut.softlab.rate.service.IRateService;
-import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,46 +33,120 @@ public class RateController {
     @Resource(name="currencyService")
     private ICurrencyService currencyService;
 
-    @RequestMapping(value = "", method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getRate(@RequestParam(value = "start", required = false) Long startTime,
-                                                       @RequestParam(value = "end", required = false) Long endTime,
-                                                       @RequestParam(value = "from", required = true) String fromCid,
-                                                       @RequestParam(value = "to",required = false) String toCid
-                                                       ){
-        Map<String, Object> result = new HashMap<>();
-        //如果为空 则为一年的间隔
-        Date startDate = null;
-        if(startTime == null){
-            Calendar c = Calendar.getInstance();
-            c.setTime(new Date(System.currentTimeMillis()));
-            c.add(Calendar.YEAR, -1);
-            startDate = c.getTime();
-        }else {
-            startDate = new Date(startTime);
-        }
-        Date endDate = endTime == null?new Date(System.currentTimeMillis()) : new Date(endTime);
+    @Resource(name = "deviceService")
+    private IDeviceService deviceService;
 
-        Currency from = currencyService.findOne(fromCid);
-        if(toCid == null){
-            if(!from.getCode().equals("USD")){
-                System.out.println(startDate);
-                ChartData chartData = rateService.getSpecificRate(startDate, endDate, from);
-                result.put(ResponseField.result, chartData);
-                result.put(ResponseField.HttpStatus, HttpStatus.OK);
-                return new ResponseEntity<>(result, HttpStatus.OK);
-            }else {
-                result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
-                result.put(ResponseField.error_message, "the first currency can not be USD");
-                return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
-            }
+    @RequestMapping(value = "/current", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, Object>> getHistoryRate(@RequestParam(value = "from", required = false) String fromCid,
+                                                              @RequestParam(value = "to",required = false) String toCid,
+                                                              @RequestParam(value = "favorite", required = false, defaultValue = "false") Boolean fav,
+                                                              @RequestParam(value = "token", required = false) String token
+                                                              ){
+        Map<String, Object> result = new HashMap<>();
+
+        if(fav){
+           if(token == null){
+               result.put(ResponseField.error_message, "token is required");
+               result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+               return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+           }else{
+               User user = deviceService.findUserByToken(token);
+               if(user == null){
+                   result.put(ResponseField.error_message, "token error");
+                   result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                   return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+               }else {
+                   Set<Favorite> favorites = user.getFavorites();
+
+                   String baseCid = fromCid != null ? fromCid : toCid;
+                   edu.ut.softlab.rate.model.Currency baseCurrency = currencyService.findOne(baseCid);
+                   double currentBaseRate = rateService.getCurrentRate(baseCurrency);
+
+                   Map<String, Double> values = new HashMap<>();
+                   for(Favorite favorite : favorites){
+                       Currency toCurrency = favorite.getCurrency();
+                       double currentToRate = rateService.getCurrentRate(toCurrency);
+                       if(fromCid != null && toCid == null){
+                           values.put(toCurrency.getCid(), Utility.round(currentToRate/currentBaseRate, 5));
+                       }else if (fromCid == null & toCid != null) {
+                           values.put(toCurrency.getCid(), Utility.round(currentBaseRate/currentToRate, 5));
+                       }
+                   }
+                   Map<String, Object> rates = new HashMap<>();
+                   rates.put("rates", values);
+                   result.put(ResponseField.result, rates);
+                   result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+                   return new ResponseEntity<>(result, HttpStatus.OK);
+               }
+           }
         }else {
-            String startDateStr = new SimpleDateFormat("yyyy-MM-dd").format(startDate);
-            System.out.println(startDateStr);
-            String endDateStr = new SimpleDateFormat("yyyy-MM-dd").format(endDate);
-            ChartData chartData = rateService.getHistoryRate(startDateStr, endDateStr, fromCid, toCid);
-            result.put(ResponseField.result, chartData);
-            result.put(ResponseField.HttpStatus, HttpStatus.OK);
+            String baseCid = fromCid != null ? fromCid : toCid;
+            Currency baseCurrency = currencyService.findOne(baseCid);
+            double currentBaseRate = rateService.getCurrentRate(baseCurrency);
+            List<Currency> currencyList = currencyService.getCurrencyList();
+            List<RateResultBean> values = new ArrayList<>();
+            for(Currency currency:currencyList){
+                if(!currency.getCid().equals(baseCurrency.getCid())){
+                    double currentToRate = rateService.getCurrentRate(currency);
+                    if(fromCid != null && toCid == null){
+                        values.add(new RateResultBean(currency.getCid(), Utility.round(currentToRate / currentBaseRate, 5)));
+                    }else if (fromCid == null & toCid != null) {
+                        values.add(new RateResultBean(currency.getCid(), Utility.round(currentBaseRate / currentToRate, 5)));
+                    }
+                }
+            }
+            Map<String, Object> rates = new HashMap<>();
+            rates.put("rates", values);
+            result.put(ResponseField.result, rates);
+            result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(result, HttpStatus.OK);
         }
     }
+
+    @RequestMapping(value = "/history", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, Object>> getCurrentRate(@RequestParam(value = "start", required = false) Long startTime,
+                                                              @RequestParam(value = "end", required = false) Long endTime,
+                                                              @RequestParam(value = "from", required = false) String fromCid,
+                                                              @RequestParam(value = "to", required = false) String toCid){
+        Map<String, Object> result = new HashMap<>();
+        if(startTime == null || endTime == null){
+            result.put(ResponseField.error_message, "startTime and endTime are required");
+            result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
+        if(fromCid == null || toCid == null){
+            result.put(ResponseField.error_message, "fromCid and toCid are required");
+            result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+        }
+        String startDateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date(startTime));
+        String endDateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date(endTime));
+        ChartData chartData = rateService.getHistoryRate(startDateStr, endDateStr, fromCid, toCid);
+        result.put(ResponseField.result, chartData);
+        result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
