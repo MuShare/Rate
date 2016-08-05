@@ -33,3 +33,23 @@ device_token 设备token
 response:
 
 login_token
+
+3. 注册
+/user/register
+
+method: POST
+
+parameter:
+uname
+
+email
+
+telephone
+
+password
+
+response:
+
+uid
+
+
