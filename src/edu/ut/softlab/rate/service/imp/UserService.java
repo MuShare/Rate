@@ -10,6 +10,7 @@ import edu.ut.softlab.rate.bean.UserBean;
 import edu.ut.softlab.rate.dao.*;
 import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.*;
+import edu.ut.softlab.rate.service.IDeviceService;
 import edu.ut.softlab.rate.service.IUserService;
 import edu.ut.softlab.rate.service.common.AbstractService;
 import org.directwebremoting.annotations.RemoteMethod;
@@ -38,6 +39,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 	@Resource(name = "deviceDao")
 	private IDeviceDao deviceDao;
+
+	@Resource(name = "deviceService")
+	private IDeviceService deviceService;
 	
 	public UserService(){
 		super();
@@ -80,24 +84,43 @@ public class UserService extends AbstractService<User> implements IUserService {
 	}
 
 	@Override
-	public String mobileLogin(String email, String password, String deviceToken, String os, String ip) {
+	public String mobileLogin(String email, String password, String deviceToken, String os, String ip, String deviceId) {
 		List<User> users = userDao.queryList("email", email);
 		if(users.size() == 0){
 			return null;
 		}else if(users.get(0).getPassword().equals(password)){
-			Device device = new Device();
-			device.setDeviceToken(deviceToken);
-			device.setLastLoginTime(new Date());
-			String token = Utility.getToken(email);
-			device.setLoginToken(token);
-			device.setLastLoginIp(ip);
-			device.setUser(users.get(0));
-			device.setOsVersion(os);
-			deviceDao.create(device);
-			return Utility.getToken(email);
+			//强制删除登录的情况
+			Device device = deviceService.findDeviceByDeviceId(deviceId);
+			if(device == null){
+				device = new Device();
+				device.setDeviceToken(deviceToken);
+				device.setLastLoginTime(new Date());
+				String token = Utility.getToken(email);
+				device.setLoginToken(token);
+				device.setLastLoginIp(ip);
+				device.setUser(users.get(0));
+				device.setOsVersion(os);
+				device.setDeviceId(deviceId);
+				deviceService.create(device);
+				return token;
+			}else {
+				device.setLastLoginTime(new Date());
+				device.setLastLoginIp(ip);
+				device.setOsVersion(os);
+				String token = Utility.getToken(email);
+				device.setLoginToken(token);
+				device.setDeviceToken(deviceToken);
+				return token;
+			}
 		}else {
 			return null;
 		}
+	}
+
+	@Override
+	public String mobileTwiceLogin(String token, String deviceToken, String ip) {
+		String newToken = deviceService.updateToken(token, deviceToken, ip);
+		return newToken;
 	}
 
 	@Override
@@ -188,6 +211,14 @@ public class UserService extends AbstractService<User> implements IUserService {
 		subscribe.setIsOnce(isOnce);
 		subscribe.setIsSendEmail(isSendEmail);
 		subscribe.setIsSendSms(isSendSms);
+		subscribeDao.create(subscribe);
+		return subscribe.getSid();
+	}
+
+	@Override
+	public String addSubscribe(Subscribe subscribe, String uid) {
+		User user = userDao.findOne(uid);
+		subscribe.setUser(user);
 		subscribeDao.create(subscribe);
 		return subscribe.getSid();
 	}

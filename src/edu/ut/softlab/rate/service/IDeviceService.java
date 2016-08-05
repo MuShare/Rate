@@ -9,4 +9,6 @@ import edu.ut.softlab.rate.model.User;
  */
 public interface IDeviceService extends IOperations<Device>{
     User findUserByToken(String token);
+    String updateToken(String currentToken, String deviceToken, String ip);
+    Device findDeviceByDeviceId(String deviceId);
 }

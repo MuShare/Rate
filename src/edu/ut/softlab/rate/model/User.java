@@ -36,7 +36,7 @@ public class User implements Serializable {
 	@Column(name="password")
 	private String password;
 
-	@Column(name="loginDate", columnDefinition = "DATETIME")
+	@Column(name="loginDate")
 	@Temporal(TemporalType.DATE)
 	private Date loginDate;
 

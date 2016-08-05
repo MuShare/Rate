@@ -30,4 +30,28 @@ public class DeviceDao extends AbstractHibernateDao<Device> implements IDeviceDa
             return device.getUser();
         }
     }
+
+    @Override
+    public Device findDeviceByToken(String token) {
+        Criteria criteria = getCurrentSesstion().createCriteria(Device.class)
+                .add(Restrictions.eq("loginToken", token));
+        Device device = (Device)criteria.uniqueResult();
+        if(device == null){
+            return null;
+        }else {
+            return device;
+        }
+    }
+
+    @Override
+    public Device findDeviceByDeviceId(String deviceId) {
+        Criteria criteria = getCurrentSesstion().createCriteria(Device.class)
+                .add(Restrictions.eq("deviceId", deviceId));
+        Device device = (Device)criteria.uniqueResult();
+        if(device == null){
+            return null;
+        }else {
+            return device;
+        }
+    }
 }

@@ -18,6 +18,8 @@ public interface IUserService extends IOperations<User> {
 //    List<Subscribe> GetSubscribes(User user);
     String addSubscribe(String sname, double min, double max, boolean isEnable, boolean isOnce,
                                boolean isSendEmail, boolean isSendSms, String from, String to, String userId);
+
+    String addSubscribe(Subscribe subscribe, String uid);
     List<SubscribeBean> getSubscribes(HttpSession session);
     SubscribeBean getSubscribe(String sid);
     UserBean checkSession(HttpSession session);
@@ -26,6 +28,7 @@ public interface IUserService extends IOperations<User> {
     boolean editSubscribe(String subscribeSid, String fromCurrencyCid, String toCurrencyCid, String sname, double min, double max, boolean isEnable, boolean isOnce, boolean isSendEmail, boolean isSendSms);
     boolean deleteSuscribe(String subscribeSid);
     boolean Validate(String uid, String validateCode);
-    String mobileLogin(String email, String password, String deviceToken, String os, String ip);
+    String mobileLogin(String email, String password, String deviceToken, String os, String ip, String deviceId);
+    String mobileTwiceLogin(String token, String deviceToken, String ip);
 }
 

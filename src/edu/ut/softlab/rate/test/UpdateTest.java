@@ -14,9 +14,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -57,18 +59,11 @@ public class UpdateTest {
     @Test
     @Rollback(false)
     @Transactional
-    public void critTest(){
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("please click the following url to validate your email address,please click " +
-                "the following url to validate your email address," +
-                "please click the following url to validate your email address" +
-                "please click the following url to validate your email address" +
-                "please click the following url to validate your email address" +
-                "please click the following url to validate your email address");
-        sb.append("href=\"http://localhost:8080/api/user/activate?validateCode=");
-        sb.append("&uid=");
-        sb.append("");
-        Utility.send("alexlai@softlab.cs.tsukuba.ac.jp", sb.toString());
+    public void rateTest(){
+        Currency currency = currencyService.findOne("ff808181564e243801564e2443950005");
+        for(int i = 0; i < 500; i++){
+            double rate = rateService.getCurrentRate(currency);
+            System.out.println(rate);
+        }
     }
 }
