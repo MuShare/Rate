@@ -54,7 +54,7 @@ public class UpdateData {
         }
     }
 
-    @Scheduled(cron = "0 */1 * * * ?") //每分钟更新
+    @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
     @Transactional
     public void updateRate() {
         List<Rate> latestRates = rateService.getLatestRates();
@@ -120,9 +120,6 @@ public class UpdateData {
     public void updateOrCreateCurrentRate(IRateService rateService){
         Map<String, Double> todayRate = Utility.getRateData();
         List<Rate> latestRates = rateService.getLatestRates();
-
-        System.out.println(latestRates.get(0).getDate());
-        System.out.println(new Date());
 
         if (latestRates.get(0).getDate().toString().
                 equals(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {

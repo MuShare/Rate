@@ -79,7 +79,7 @@ public class RateController {
                    return new ResponseEntity<>(result, HttpStatus.OK);
                }
            }
-        }else {
+        }else if(fromCid == null || toCid == null){
             String baseCid = fromCid != null ? fromCid : toCid;
             Currency baseCurrency = currencyService.findOne(baseCid);
             double currentBaseRate = rateService.getCurrentRate(baseCurrency);
@@ -88,9 +88,9 @@ public class RateController {
             for(Currency currency:currencyList){
                 if(!currency.getCid().equals(baseCurrency.getCid())){
                     double currentToRate = rateService.getCurrentRate(currency);
-                    if(fromCid != null && toCid == null){
+                    if(fromCid != null){
                         values.add(new RateResultBean(currency.getCid(), Utility.round(currentToRate / currentBaseRate, 5)));
-                    }else if (fromCid == null & toCid != null) {
+                    }else if (toCid != null) {
                         values.add(new RateResultBean(currency.getCid(), Utility.round(currentBaseRate / currentToRate, 5)));
                     }
                 }
@@ -98,6 +98,18 @@ public class RateController {
             Map<String, Object> rates = new HashMap<>();
             rates.put("rates", values);
             result.put(ResponseField.result, rates);
+            result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        }else{
+            Currency fromCurrency = currencyService.findOne(fromCid);
+            Currency toCurrency = currencyService.findOne(toCid);
+            double currentFromRate = rateService.getCurrentRate(fromCurrency);
+            double currentToRate = rateService.getCurrentRate(toCurrency);
+
+            double currentRate = Utility.round(currentToRate / currentFromRate, 5);
+            Map<String, Object> value = new HashMap<>();
+            value.put("rate", currentRate);
+            result.put(ResponseField.result, value);
             result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(result, HttpStatus.OK);
         }

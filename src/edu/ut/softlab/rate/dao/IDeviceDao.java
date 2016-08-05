@@ -9,4 +9,6 @@ import edu.ut.softlab.rate.model.User;
  */
 public interface IDeviceDao extends IOperations<Device>{
     User findUserByToken(String token);
+    Device findDeviceByToken(String token);
+    Device findDeviceByDeviceId(String deviceId);
 }
