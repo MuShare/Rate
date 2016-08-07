@@ -60,7 +60,6 @@ public class UserController {
 
 	@RequestMapping(value="/activate", method = RequestMethod.GET)
 	public String activateUser(@RequestParam("validateCode") String validateCode, @RequestParam("uid") String uid ){
-		ModelAndView mv = new ModelAndView();
 		if(userService.Validate(uid, validateCode)){
 			return "redirect:/success.html";
 		}else{
@@ -276,6 +275,55 @@ public class UserController {
                 response.put(ResponseField.result, result);
                 response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             }
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Transactional
+    @RequestMapping(value = "/favorite", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, Object>> getFavorites(HttpServletRequest request){
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        if(user != null){
+            System.out.println(user.getFavorites().size());
+        }
+        return null;
+    }
+
+
+    /*
+    {"added":[],
+     "deleted":[]
+    }
+    */
+    @RequestMapping(value = "/favorite", method = RequestMethod.PUT)
+    public ResponseEntity<Map<String, Object>> updateFavorites(@RequestBody String param,
+                                                               HttpServletRequest request){
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        JSONObject paraJSON = new JSONObject(param);
+        JSONArray added = paraJSON.getJSONArray("added");
+        JSONArray deleted = paraJSON.getJSONArray("deleted");
+        if(user != null){
+            List<String> addedList = new ArrayList<>();
+            List<String> deletedList = new ArrayList<>();
+            for(Object addedCid : added){
+                addedList.add(addedCid.toString());
+            }
+            for(Object deletedCid : deleted){
+                deletedList.add(deletedCid.toString());
+            }
+            Map<String, Object> updateResult = userService.updateFavorite(addedList, deletedList, user);
+            result.put("update_result", updateResult);
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }else {
             response.put(ResponseField.error_message, "token error");

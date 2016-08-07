@@ -46,6 +46,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 	@Resource(name = "rateService")
 	private IRateService rateService;
+
+	@Resource(name = "favoriteDao")
+	private IFavoriteDao favoriteDao;
 	
 	public UserService(){
 		super();
@@ -180,6 +183,27 @@ public class UserService extends AbstractService<User> implements IUserService {
 	@Override
 	public void deleteSubscribe(Subscribe subscribe) {
 		subscribeDao.delete(subscribe);
+	}
+
+	@Override
+	public Map<String, Object> updateFavorite(List<String> addedCurrencies, List<String> deletedCurrencies, User user) {
+		List<String> addFav = new ArrayList<>();
+		List<String> deletedFav = new ArrayList<>();
+		for(String addedCurrency : addedCurrencies){
+			Favorite favorite = new Favorite();
+			favorite.setCurrency(currencyDao.findOne(addedCurrency));
+			favorite.setUser(user);
+			favoriteDao.create(favorite);
+			addFav.add(favorite.getFid());
+		}
+		for(String deletedCurrency : deletedCurrencies){
+			String deletedFid = favoriteDao.deleteFavoriteByCurrency(currencyDao.findOne(deletedCurrency), user);
+			deletedFav.add(deletedFid);
+		}
+		Map<String, Object> result = new HashMap<>();
+		result.put("addedFavorites", addFav);
+		result.put("deletedFavorites", deletedFav);
+		return result;
 	}
 
 	@Override

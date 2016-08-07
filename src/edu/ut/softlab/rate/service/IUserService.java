@@ -9,6 +9,7 @@ import edu.ut.softlab.rate.model.User;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface IUserService extends IOperations<User> {
@@ -34,5 +35,6 @@ public interface IUserService extends IOperations<User> {
     SubscribeSyncBean getSubscribes(List<Subscribe> subscribes, Set<String> sids, int rev);
     List<Subscribe> getSubscribs(User user);
     void deleteSubscribe(Subscribe subscribe);
+    Map<String, Object> updateFavorite(List<String> addedCurrencies, List<String> deletedCurrencies, User user);
 }
 
