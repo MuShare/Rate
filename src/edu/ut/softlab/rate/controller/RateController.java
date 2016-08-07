@@ -12,11 +12,13 @@ import edu.ut.softlab.rate.service.IRateService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -36,15 +38,17 @@ public class RateController {
     @Resource(name = "deviceService")
     private IDeviceService deviceService;
 
+    @Transactional
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public ResponseEntity<Map<String, Object>> getHistoryRate(@RequestParam(value = "from", required = false) String fromCid,
                                                               @RequestParam(value = "to",required = false) String toCid,
                                                               @RequestParam(value = "favorite", required = false, defaultValue = "false") Boolean fav,
-                                                              @RequestParam(value = "token", required = false) String token
+                                                              HttpServletRequest request
                                                               ){
         Map<String, Object> result = new HashMap<>();
 
         if(fav){
+            String token = request.getHeader("token");
            if(token == null){
                result.put(ResponseField.error_message, "token is required");
                result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
@@ -57,7 +61,6 @@ public class RateController {
                    return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
                }else {
                    Set<Favorite> favorites = user.getFavorites();
-
                    String baseCid = fromCid != null ? fromCid : toCid;
                    edu.ut.softlab.rate.model.Currency baseCurrency = currencyService.findOne(baseCid);
                    double currentBaseRate = rateService.getCurrentRate(baseCurrency);

@@ -1,6 +1,7 @@
 package edu.ut.softlab.rate.dao;
 
 import edu.ut.softlab.rate.dao.common.IOperations;
+import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Favorite;
 import edu.ut.softlab.rate.model.User;
 
@@ -11,4 +12,5 @@ import java.util.List;
  */
 public interface IFavoriteDao extends IOperations<Favorite>{
     List<Favorite> getFavorites(User user);
+    String deleteFavoriteByCurrency(Currency currency, User user);
 }
