@@ -56,6 +56,17 @@ public class User implements Serializable {
 	@Column(name = "favorite_revision")
 	private Integer favoriteRevision;
 
+	@Column(name = "subscribe_revision")
+	private Integer subscribeRevision;
+
+	public Integer getSubscribeRevision() {
+		return subscribeRevision;
+	}
+
+	public void setSubscribeRevision(Integer subscribeRevision) {
+		this.subscribeRevision = subscribeRevision;
+	}
+
 	public Set<Favorite> getFavorites() {
 		return favorites;
 	}

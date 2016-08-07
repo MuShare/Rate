@@ -1,6 +1,7 @@
 package edu.ut.softlab.rate.service;
 
 import edu.ut.softlab.rate.bean.SubscribeBean;
+import edu.ut.softlab.rate.bean.SubscribeSyncBean;
 import edu.ut.softlab.rate.bean.UserBean;
 import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.Subscribe;
@@ -19,7 +20,7 @@ public interface IUserService extends IOperations<User> {
     String addSubscribe(String sname, double min, double max, boolean isEnable, boolean isOnce,
                                boolean isSendEmail, boolean isSendSms, String from, String to, String userId);
 
-    String addSubscribe(Subscribe subscribe, String uid);
+    String addSubscribe(Subscribe subscribe, String fromCid, String toCid, String uid);
     List<SubscribeBean> getSubscribes(HttpSession session);
     SubscribeBean getSubscribe(String sid);
     UserBean checkSession(HttpSession session);
@@ -29,6 +30,9 @@ public interface IUserService extends IOperations<User> {
     boolean deleteSuscribe(String subscribeSid);
     boolean Validate(String uid, String validateCode);
     String mobileLogin(String email, String password, String deviceToken, String os, String ip, String deviceId);
-    String mobileTwiceLogin(String token, String deviceToken, String ip);
+    String updateSubscribe(Subscribe subscribe);
+    SubscribeSyncBean getSubscribes(List<Subscribe> subscribes, Set<String> sids, int rev);
+    List<Subscribe> getSubscribs(User user);
+    void deleteSubscribe(Subscribe subscribe);
 }
 

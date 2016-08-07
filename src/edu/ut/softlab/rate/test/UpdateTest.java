@@ -10,6 +10,15 @@ import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Rate;
 import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IRateService;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +30,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.*;
 
 
 /**
@@ -60,10 +70,30 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        Currency currency = currencyService.findOne("ff808181564e243801564e2443950005");
-        for(int i = 0; i < 500; i++){
-            double rate = rateService.getCurrentRate(currency);
-            System.out.println(rate);
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        List<Currency> currencyList = currencyService.getCurrencyList();
+        for(Currency currency : currencyList){
+            String url = "http://rate.mushare.cn/api/rate/current?from=" + currency.getCid();
+            HttpGet httpGet = new HttpGet(url);
+            try{
+                for(int i=0; i<50; i++){
+                    CloseableHttpResponse response= httpClient.execute(httpGet);
+                    HttpEntity entity = response.getEntity();
+
+                    InputStream is = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while((line = reader.readLine()) != null){
+                        sb.append(line);
+                    }
+                    Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
+                    is.close();
+                    response.close();
+                }
+            }catch (Exception ex){
+                System.out.println(ex.toString());
+            }
         }
     }
 }

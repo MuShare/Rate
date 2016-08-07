@@ -57,6 +57,16 @@ public class Subscribe implements Serializable{
     @Column(name="isSendSms")
     private Boolean isSendSms;
 
+    @Column(name="revision")
+    private Integer revision;
+
+    public Integer getRevision() {
+        return revision;
+    }
+
+    public void setRevision(Integer revision) {
+        this.revision = revision;
+    }
 
     private boolean inRange;
 
