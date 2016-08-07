@@ -70,30 +70,6 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        List<Currency> currencyList = currencyService.getCurrencyList();
-        for(Currency currency : currencyList){
-            String url = "http://rate.mushare.cn/api/rate/current?from=" + currency.getCid();
-            HttpGet httpGet = new HttpGet(url);
-            try{
-                for(int i=0; i<50; i++){
-                    CloseableHttpResponse response= httpClient.execute(httpGet);
-                    HttpEntity entity = response.getEntity();
-
-                    InputStream is = entity.getContent();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while((line = reader.readLine()) != null){
-                        sb.append(line);
-                    }
-                    Assert.assertEquals(response.getStatusLine().getStatusCode(), 200);
-                    is.close();
-                    response.close();
-                }
-            }catch (Exception ex){
-                System.out.println(ex.toString());
-            }
-        }
+        updateData.addCurrencyAndRate("INR");
     }
 }

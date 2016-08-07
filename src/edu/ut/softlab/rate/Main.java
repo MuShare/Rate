@@ -1,16 +1,8 @@
 package edu.ut.softlab.rate;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.notnoop.apns.*;
+import edu.ut.softlab.rate.model.Subscribe;
 
-import java.io.*;
-import java.util.*;
 
 /**
  * Created by alex on 16-4-12.
@@ -18,94 +10,18 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println(Utility.getUtility().svgToString("web/static/img/flags/ad.svg"));
-
-
-
-
-
-//        File file = new File("src/code.txt");
-//        InputStreamReader reader = null;
-//        try{
-//            reader = new InputStreamReader(new FileInputStream(file));
-//            BufferedReader br = new BufferedReader(reader);
-//            String line = br.readLine();
+//        ApnsService service =
+//                APNS.newService()
+//                        .withCert("aps_development.p12", "8eu3d7wn32")
+//                        .withSandboxDestination()
+//                        .build();
 //
-//            File writeName = new File("src/a");
-//            BufferedWriter out = new BufferedWriter(new FileWriter(writeName));
-//
-//            while(line != null){
-//                String code = line.substring(3,6);
-//                out.write(code+" = "+code);
-//                out.newLine();
-//                out.flush();
-//                line = br.readLine();
-//                System.out.println(code);
-//            }
-//            out.close();
-//
-//        }catch(Exception ex){
-//            System.out.println(ex.toString());
-//        }
-
-
-//        Currency currency = java.util.Currency.getInstance("USD");
-//
-//
-//
-//
-//        CloseableHttpClient httpClient = HttpClients.createDefault();
-//        HttpGet httpGet = new HttpGet("http://country.io/names.json");
-//        Map<String, Set<String>> result = new HashMap<>();
-//        try{
-//            CloseableHttpResponse response = httpClient.execute(httpGet);
-//            HttpEntity entity = response.getEntity();
-//            InputStream is = entity.getContent();
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-//            StringBuilder sb = new StringBuilder();
-//            String line;
-//            while((line = reader.readLine()) != null){
-//                sb.append(line);
-//            }
-//
-//
-//
-//            File writeName = new File("src/a");
-//            BufferedWriter out = new BufferedWriter(new FileWriter(writeName));
-//
-//
-//
-//
-//
-//
-//            JSONObject jsonObject = new JSONObject(sb.toString());
-//            for(String key : jsonObject.keySet()){
-//                if(result.containsKey(key)){
-//                    result.get(key).add(jsonObject.getString(key));
-//                }else {
-//                    Set<String> set = new HashSet<>();
-//                    set.add(jsonObject.getString(key));
-//                    result.put(key, set);
-//                }
-//                System.out.println(jsonObject.getString(key));
-//            }
-//            for(String key : result.keySet()){
-//                StringBuilder sB = new StringBuilder();
-//                sB.append(key+" =");
-//                for(String country:result.get(key)){
-//                    sB.append(" "+country);
-//                }
-//                out.write(sB.toString());
-//                out.newLine();
-//                out.flush();
-//            }
-//            out.close();
-//
-//            EntityUtils.consume(entity);
-//            response.close();
-//        }catch (Exception ex){
-//            System.out.println(ex.toString());
-//        }
-//
+//        String payload = APNS.newPayload().alertBody("Can't be simpler than this!").build();
+//        String token = "0f1d5131 5e7d1569 af26c315 0779fcb3 7d9057f9 a920da9e ae6e8bc1 53abb0d2";
+//        service.push(token, payload);
+        Subscribe subscribe = new Subscribe();
+        subscribe.setMax(null);
+        System.out.println(subscribe.getMax() == null);
     }
 }
+

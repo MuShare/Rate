@@ -133,8 +133,6 @@ public class UserService extends AbstractService<User> implements IUserService {
 			subscribe.setIsSendEmail(updateSubscribe.getIsSendEmail());
 			subscribe.setIsSendSms(updateSubscribe.getIsSendSms());
 			subscribe.setIsEnable(updateSubscribe.getIsEnable());
-			subscribe.setMax(updateSubscribe.getMax());
-			subscribe.setMin(updateSubscribe.getMin());
 			subscribe.setRevision(subscribe.getUser().getSubscribeRevision()+1);
 			subscribeDao.update(subscribe);
 			return subscribe.getSid();
@@ -186,24 +184,17 @@ public class UserService extends AbstractService<User> implements IUserService {
 	}
 
 	@Override
-	public Map<String, Object> updateFavorite(List<String> addedCurrencies, List<String> deletedCurrencies, User user) {
-		List<String> addFav = new ArrayList<>();
-		List<String> deletedFav = new ArrayList<>();
-		for(String addedCurrency : addedCurrencies){
-			Favorite favorite = new Favorite();
-			favorite.setCurrency(currencyDao.findOne(addedCurrency));
-			favorite.setUser(user);
-			favoriteDao.create(favorite);
-			addFav.add(favorite.getFid());
-		}
-		for(String deletedCurrency : deletedCurrencies){
-			String deletedFid = favoriteDao.deleteFavoriteByCurrency(currencyDao.findOne(deletedCurrency), user);
-			deletedFav.add(deletedFid);
-		}
-		Map<String, Object> result = new HashMap<>();
-		result.put("addedFavorites", addFav);
-		result.put("deletedFavorites", deletedFav);
-		return result;
+	public String deleteFavorite(Currency currency, User user) {
+		return favoriteDao.deleteFavoriteByCurrency(currency, user);
+	}
+
+	@Override
+	public String addFavorite(Currency currency, User user) {
+		Favorite favorite = new Favorite();
+		favorite.setCurrency(currency);
+		favorite.setUser(user);
+		favoriteDao.create(favorite);
+		return favorite.getFid();
 	}
 
 	@Override
@@ -303,6 +294,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 		Currency fromCurrency = currencyDao.findOne(fromCid);
 		Currency toCurrency = currencyDao.findOne(toCid);
 		User user = userDao.findOne(uid);
+		int currentRev = user.getSubscribeRevision();
+		subscribe.setRevision(currentRev);
+		user.setSubscribeRevision(currentRev+1);
 		subscribe.setUser(user);
 		subscribe.setCurrency(fromCurrency);
 		subscribe.setToCurrency(toCurrency);
@@ -360,6 +354,8 @@ public class UserService extends AbstractService<User> implements IUserService {
 			user.setUname(uname);
 			user.setPassword(password);
 			user.setEmail(email);
+			user.setSubscribeRevision(0);
+			user.setFavoriteRevision(0);
 			user.setTelephone(telephone);
 			user.setLoginDate(new Date());
 			user.setValidateCode(Utility.getToken(user.getEmail()));
