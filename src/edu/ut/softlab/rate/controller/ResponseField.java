@@ -6,5 +6,6 @@ package edu.ut.softlab.rate.controller;
 public class ResponseField {
     public static final String result = "result";
     public static final String HttpStatus = "status";
-    public static final String error_message = "error message";
+    public static final String error_message = "error_message";
+    public static final String error_code = "error_code";
 }

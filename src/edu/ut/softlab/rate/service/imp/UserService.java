@@ -6,20 +6,21 @@ import javax.servlet.http.HttpSession;
 import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.bean.CurrencyBean;
 import edu.ut.softlab.rate.bean.SubscribeBean;
+import edu.ut.softlab.rate.bean.SubscribeSyncBean;
 import edu.ut.softlab.rate.bean.UserBean;
 import edu.ut.softlab.rate.dao.*;
 import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.*;
+import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.IDeviceService;
+import edu.ut.softlab.rate.service.IRateService;
 import edu.ut.softlab.rate.service.IUserService;
 import edu.ut.softlab.rate.service.common.AbstractService;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service("userService")
 @RemoteProxy
@@ -42,6 +43,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 	@Resource(name = "deviceService")
 	private IDeviceService deviceService;
+
+	@Resource(name = "rateService")
+	private IRateService rateService;
 	
 	public UserService(){
 		super();
@@ -87,7 +91,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 	public String mobileLogin(String email, String password, String deviceToken, String os, String ip, String deviceId) {
 		List<User> users = userDao.queryList("email", email);
 		if(users.size() == 0){
-			return null;
+			return "account_error";
 		}else if(users.get(0).getPassword().equals(password)){
 			//强制删除登录的情况
 			Device device = deviceService.findDeviceByDeviceId(deviceId);
@@ -113,14 +117,69 @@ public class UserService extends AbstractService<User> implements IUserService {
 				return token;
 			}
 		}else {
-			return null;
+			return "pass_error";
 		}
 	}
 
+
+
 	@Override
-	public String mobileTwiceLogin(String token, String deviceToken, String ip) {
-		String newToken = deviceService.updateToken(token, deviceToken, ip);
-		return newToken;
+	public String updateSubscribe(Subscribe updateSubscribe) {
+		Subscribe subscribe = subscribeDao.findOne(updateSubscribe.getSid());
+		if(subscribe != null){
+			subscribe.setIsSendEmail(updateSubscribe.getIsSendEmail());
+			subscribe.setIsSendSms(updateSubscribe.getIsSendSms());
+			subscribe.setIsEnable(updateSubscribe.getIsEnable());
+			subscribe.setMax(updateSubscribe.getMax());
+			subscribe.setMin(updateSubscribe.getMin());
+			subscribe.setRevision(subscribe.getUser().getSubscribeRevision()+1);
+			subscribeDao.update(subscribe);
+			return subscribe.getSid();
+		}
+		return null;
+	}
+
+	@Override
+	public SubscribeSyncBean getSubscribes(List<Subscribe> subscribes, Set<String> sids, int rev) {
+		List<SubscribeBean> createdOrUpdated = new ArrayList<>();
+		List<String> deletedSubscribes = new ArrayList<>();
+		Map<String, Double> rates = new HashMap<>();
+
+		SubscribeSyncBean subscribeSyncBean = new SubscribeSyncBean();
+		Set<String> deletedSids = new HashSet<>();
+
+		for(Subscribe subscribe : subscribes){
+			if(subscribe.getRevision() > rev){
+				createdOrUpdated.add(new SubscribeBean(subscribe));
+			}
+			deletedSids.add(subscribe.getSid());
+		}
+		for(String sid : sids){
+			if(!deletedSids.contains(sid)){
+				deletedSubscribes.add(sid);
+			}
+		}
+
+		for(Subscribe subscribe : subscribes){
+			double rate = rateService.getCurrentRate(subscribe.getCurrency().getCid(), subscribe.getToCurrency().getCid());
+			rates.put(subscribe.getSid(), rate);
+		}
+
+		subscribeSyncBean.setCreatedOrUpdated(createdOrUpdated);
+		subscribeSyncBean.setDeletedSubcribes(deletedSubscribes);
+		subscribeSyncBean.setRates(rates);
+		return subscribeSyncBean;
+	}
+
+
+	@Override
+	public List<Subscribe> getSubscribs(User user) {
+		return subscribeDao.getSubscribes(user);
+	}
+
+	@Override
+	public void deleteSubscribe(Subscribe subscribe) {
+		subscribeDao.delete(subscribe);
 	}
 
 	@Override
@@ -216,9 +275,13 @@ public class UserService extends AbstractService<User> implements IUserService {
 	}
 
 	@Override
-	public String addSubscribe(Subscribe subscribe, String uid) {
+	public String addSubscribe(Subscribe subscribe, String fromCid, String toCid, String uid) {
+		Currency fromCurrency = currencyDao.findOne(fromCid);
+		Currency toCurrency = currencyDao.findOne(toCid);
 		User user = userDao.findOne(uid);
 		subscribe.setUser(user);
+		subscribe.setCurrency(fromCurrency);
+		subscribe.setToCurrency(toCurrency);
 		subscribeDao.create(subscribe);
 		return subscribe.getSid();
 	}
@@ -268,23 +331,27 @@ public class UserService extends AbstractService<User> implements IUserService {
 	@Override
 	@RemoteMethod
 	public String register(String uname, String email, String telephone, String password) {
-		User user = new User();
-		user.setUname(uname);
-		user.setPassword(password);
-		user.setEmail(email);
-		user.setTelephone(telephone);
-		user.setLoginDate(new Date());
-		user.setValidateCode(Utility.getToken(user.getEmail()));
-		this.userDao.create(user);
-		StringBuilder sb = new StringBuilder();
-		sb.append("please click the following url to validate your email address,please click \n");
-		sb.append("href=\"http://rate.mushare.cn/api/user/activate?validateCode=");
-		sb.append(user.getValidateCode());
-		sb.append("&uid=");
-		sb.append(user.getUid());
-		Thread sendMail = new Thread(new SendMail(user.getEmail(), sb.toString()));
-		sendMail.start();
-		return user.getUid();
+		if(userDao.queryList("email", email).size() == 0){
+			User user = new User();
+			user.setUname(uname);
+			user.setPassword(password);
+			user.setEmail(email);
+			user.setTelephone(telephone);
+			user.setLoginDate(new Date());
+			user.setValidateCode(Utility.getToken(user.getEmail()));
+			this.userDao.create(user);
+			StringBuilder sb = new StringBuilder();
+			sb.append("please click the following url to validate your email address,please click \n");
+			sb.append("href=\"http://rate.mushare.cn/api/user/activate?validateCode=");
+			sb.append(user.getValidateCode());
+			sb.append("&uid=");
+			sb.append(user.getUid());
+			Thread sendMail = new Thread(new SendMail(user.getEmail(), sb.toString()));
+			sendMail.start();
+			return user.getUid();
+		}else {
+			return null;
+		}
 	}
 
 	private class SendMail implements Runnable{

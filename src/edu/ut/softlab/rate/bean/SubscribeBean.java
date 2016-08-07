@@ -1,5 +1,8 @@
 package edu.ut.softlab.rate.bean;
 
+import edu.ut.softlab.rate.Utility;
+import edu.ut.softlab.rate.model.Currency;
+import edu.ut.softlab.rate.model.Subscribe;
 import org.directwebremoting.annotations.DataTransferObject;
 
 /**
@@ -34,6 +37,22 @@ public class SubscribeBean {
         this.isSendEmail = isSendEmail;
         this.isSendSms = isSendSms;
         this.current = current;
+    }
+
+    public SubscribeBean(Subscribe subscribe){
+        Currency fromCurrency = subscribe.getCurrency();
+        Currency toCurrency = subscribe.getToCurrency();
+        this.sid = subscribe.getSid();
+        this.sname = subscribe.getSname();
+        this.fromCurrency = new CurrencyBean(fromCurrency);
+        this.toCurrency = new CurrencyBean(toCurrency);
+        this.userBean = new UserBean(subscribe.getUser());
+        this.min = subscribe.getMin();
+        this.max = subscribe.getMax();
+        this.isEnable = subscribe.getIsEnable();
+        this.isOnce = subscribe.getIsOnce();
+        this.isSendEmail = subscribe.getIsSendEmail();
+        this.isSendSms = subscribe.getIsSendSms();
     }
 
     public double getCurrent() {
