@@ -22,6 +22,7 @@ public class SubscribeBean {
     private boolean isSendEmail;
     private boolean isSendSms;
     private double current;
+    private double threshold;
 
     public SubscribeBean(String sid, String sname, CurrencyBean fromCurrency, CurrencyBean toCurrency, UserBean userBean,
                          double min, double max, boolean isEnable, boolean isOnce, boolean isSendEmail, boolean isSendSms, double current){
@@ -47,12 +48,14 @@ public class SubscribeBean {
         this.fromCurrency = new CurrencyBean(fromCurrency);
         this.toCurrency = new CurrencyBean(toCurrency);
         this.userBean = new UserBean(subscribe.getUser());
+
         this.min = subscribe.getMin();
         this.max = subscribe.getMax();
         this.isEnable = subscribe.getIsEnable();
         this.isOnce = subscribe.getIsOnce();
         this.isSendEmail = subscribe.getIsSendEmail();
         this.isSendSms = subscribe.getIsSendSms();
+        threshold = (subscribe.getMin() != 0 ? subscribe.getMin() : subscribe.getMax());
     }
 
     public double getCurrent() {

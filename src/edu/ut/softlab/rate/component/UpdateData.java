@@ -18,6 +18,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -43,15 +47,123 @@ public class UpdateData {
     @Value("#{supplement}")
     private Properties supplement;
 
+    @Resource(name = "currencyDao")
+    private ICurrencyDao currencyDao;
+
+
+
+
     public void createCurrency() {
         for (Object currencyCode : supplement.values()) {
             Currency currency = new Currency();
             currency.setCode(currencyCode.toString());
-            dao.create(currency);
-            if (dao != null) {
-                System.out.println("not null");
+            if(currencyDao.queryList("code", currencyCode.toString()).size() == 0){
+                dao.create(currency);
+                System.out.println(currencyCode+" created");
             }
         }
+    }
+
+
+
+
+    @Transactional
+    public void addCurrencyAndRate(String code){
+        Currency newCurrency = new Currency();
+        newCurrency.setCode(code);
+        if(currencyDao.queryList("code", code).size() == 0){
+            newCurrency.setRevision(currencyDao.getCurrentRev()+1);
+            dao.create(newCurrency);
+            System.out.println(code+" created");
+        }
+        Date latestUpdate;
+        Calendar cl = Calendar.getInstance();
+
+            latestUpdate = new GregorianCalendar(2013, 0, 0).getTime();
+                if(currencyDao.queryList("code", code).size() > 0){
+                    if (!code.equals("USD")) {
+                        ArrayList<String> result = Utility.postData(latestUpdate, code);
+                        if(result.size() > 20){
+                            System.out.println(result.size());
+                            Currency currency = dao.queryList("code", code).get(0);
+                            double preRate = 0;
+                            Date preDate = latestUpdate;
+
+                            for (int i = 2; i < result.size() - 1; i++) {
+                                if(code.equals("CNY")){
+                                    System.out.println(result.get(i));
+                                }
+                                Rate rate = new Rate();
+                                rate.setCurrency(currency);
+                                String[] data = result.get(i).split(" ");
+
+                                try {
+                                    Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
+                                    long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
+                                    if (days > 1) {
+                                        for (int j = 0; j < days - 1; j++) {
+                                            //插入空缺的
+                                            Rate voidRate = new Rate();
+                                            voidRate.setCurrency(currency);
+                                            voidRate.setValue(preRate);
+                                            cl.setTime(preDate);
+                                            cl.add(Calendar.DATE, j + 1);
+                                            voidRate.setDate(cl.getTime());
+                                            rateDao.create(voidRate);
+                                        }
+                                    }
+                                    rate.setDate(date);
+                                    rate.setValue(Double.parseDouble(data[3]));
+                                    rateDao.create(rate);
+                                    preDate = rate.getDate();
+                                    preRate = rate.getValue();
+                                } catch (Exception ex) {
+                                    System.out.println("date error "+ code);
+                                }
+                            }
+                            Date current = new Date();
+                            long days = (current.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
+                            try {
+                                if (days > 1) {
+                                    for (int j = 0; j < days - 1; j++) {
+                                        //插入空缺的
+                                        Rate voidRate = new Rate();
+                                        voidRate.setCurrency(currency);
+                                        voidRate.setValue(preRate);
+                                        cl.setTime(preDate);
+                                        cl.add(Calendar.DATE, j + 1);
+                                        voidRate.setDate(cl.getTime());
+                                        rateDao.create(voidRate);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                currencyDao.delete(newCurrency);
+                                System.out.println("date error "+ code+" will be deleted");
+                            }
+                            try {
+                                File supplement = new File("src/rate_supplement.properties");
+                                FileWriter fileWriter = new FileWriter(supplement, true);
+                                BufferedWriter writer = new BufferedWriter(fileWriter);
+                                writer.write(code+" = "+code+"\n");
+                                writer.flush();
+                                writer.close();
+                            }catch (Exception ex){
+                                System.out.println(ex.toString());
+                            }
+
+
+
+                        }else {
+                            currencyDao.delete(newCurrency);
+                            System.out.println("error"+ newCurrency.getCode()+ " is deleted");
+                        }
+                    }
+                }
+
+
+            //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
+            updateOrCreateCurrentRate(rateService);
+        supplement.put(code, code);
     }
 
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新

@@ -6,6 +6,7 @@ import javax.servlet.http.HttpSession;
 
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
 import edu.ut.softlab.rate.model.Subscribe;
+import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IDeviceService;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
@@ -34,6 +35,9 @@ public class UserController {
 
     @Resource(name = "deviceService")
     private IDeviceService deviceService;
+
+    @Resource(name = "currencyService")
+    private ICurrencyService currencyService;
 
 
 
@@ -172,21 +176,28 @@ public class UserController {
     /**
      * 添加订阅
      * @param subscribe subscribe 实体
-     * @param uid 用户id
      * @return 响应实体
      */
     @RequestMapping(value="/subscribe", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> addSubscribe(Subscribe subscribe,
                                                             @RequestParam(value = "from", required = true)String from,
                                                             @RequestParam(value = "to", required = true)String to,
-                                                            @RequestParam(value = "uid", required = true)String uid,
+                                                            @RequestParam(value = "isAbove", required = true)Boolean isAbove,
+                                                            @RequestParam(value = "threshold", required = true)Double threshold,
                                                             HttpServletRequest request){
         String token = request.getHeader("token");
         User loggedUser = deviceService.findUserByToken(token);
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
-        if(loggedUser != null && loggedUser.getUid().equals(uid)){
-            String sid = userService.addSubscribe(subscribe, from, to, uid);
+        if(loggedUser != null){
+            if(isAbove){
+                subscribe.setMax(0.0);
+                subscribe.setMin(threshold);
+            }else {
+                subscribe.setMin(0.0);
+                subscribe.setMax(threshold);
+            }
+            String sid = userService.addSubscribe(subscribe, from, to, loggedUser.getUid());
             result.put("sid", sid);
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
@@ -201,12 +212,21 @@ public class UserController {
 
     @RequestMapping(value="/subscribe", method = RequestMethod.PUT)
     public ResponseEntity<Map<String, Object>> updateSubscribe(Subscribe subscribe,
+                                                               @RequestParam(value = "isAbove", required = true)Boolean isAbove,
+                                                               @RequestParam(value = "threshold", required = true)Double threshold,
                                                                HttpServletRequest request){
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
         if(user != null){
+            if(isAbove){
+                subscribe.setMax(0.0);
+                subscribe.setMin(threshold);
+            }else {
+                subscribe.setMin(0.0);
+                subscribe.setMax(threshold);
+            }
             String sid = userService.updateSubscribe(subscribe);
             user.setSubscribeRevision(user.getSubscribeRevision()+1);
             userService.update(user);
@@ -284,51 +304,32 @@ public class UserController {
         }
     }
 
-    @Transactional
-    @RequestMapping(value = "/favorite", method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getFavorites(HttpServletRequest request){
-        String token = request.getHeader("token");
-        User user = deviceService.findUserByToken(token);
-        if(user != null){
-            System.out.println(user.getFavorites().size());
-        }
-        return null;
-    }
 
-
-    /*
-    {"added":[],
-     "deleted":[]
-    }
-    */
-    @RequestMapping(value = "/favorite", method = RequestMethod.PUT)
-    public ResponseEntity<Map<String, Object>> updateFavorites(@RequestBody String param,
+    @RequestMapping(value = "/favorite", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> updateFavorites(@RequestParam(value = "cid", required = true) String cid,
+                                                               @RequestParam(value = "favorite", required = true) Boolean isFavorite,
                                                                HttpServletRequest request){
+
+        System.out.println(cid+" "+isFavorite);
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
-        JSONObject paraJSON = new JSONObject(param);
-        JSONArray added = paraJSON.getJSONArray("added");
-        JSONArray deleted = paraJSON.getJSONArray("deleted");
         if(user != null){
-            List<String> addedList = new ArrayList<>();
-            List<String> deletedList = new ArrayList<>();
-            for(Object addedCid : added){
-                addedList.add(addedCid.toString());
+            String fid;
+            if(isFavorite){
+                 fid = userService.addFavorite(currencyService.findOne(cid), user);
+            }else {
+                fid = userService.deleteFavorite(currencyService.findOne(cid), user);
             }
-            for(Object deletedCid : deleted){
-                deletedList.add(deletedCid.toString());
-            }
-            Map<String, Object> updateResult = userService.updateFavorite(addedList, deletedList, user);
-            result.put("update_result", updateResult);
+            result.put("fid", fid);
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }else {
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.error_code, 350);
-            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }

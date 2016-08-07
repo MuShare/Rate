@@ -46,7 +46,6 @@ public class RateController {
                                                               HttpServletRequest request
                                                               ){
         Map<String, Object> result = new HashMap<>();
-
         if(fav){
             String token = request.getHeader("token");
            if(token == null){
@@ -65,16 +64,22 @@ public class RateController {
                    edu.ut.softlab.rate.model.Currency baseCurrency = currencyService.findOne(baseCid);
                    double currentBaseRate = rateService.getCurrentRate(baseCurrency);
 
-                   Map<String, Double> values = new HashMap<>();
+                   List<RateResultBean> values = new ArrayList<>();
                    for(Favorite favorite : favorites){
                        Currency toCurrency = favorite.getCurrency();
                        double currentToRate = rateService.getCurrentRate(toCurrency);
                        if(fromCid != null && toCid == null){
-                           values.put(toCurrency.getCid(), Utility.round(currentToRate/currentBaseRate, 5));
+                           values.add(new RateResultBean(toCurrency.getCid(), toCurrency.getCode(), Utility.round(currentToRate / currentBaseRate, 5)));
                        }else if (fromCid == null & toCid != null) {
-                           values.put(toCurrency.getCid(), Utility.round(currentBaseRate/currentToRate, 5));
+                           values.add(new RateResultBean(toCurrency.getCid(), toCurrency.getCode(), Utility.round(currentBaseRate / currentToRate, 5)));
                        }
                    }
+                   Collections.sort(values, new Comparator<RateResultBean>() {
+                       @Override
+                       public int compare(RateResultBean o1, RateResultBean o2) {
+                           return o1.getCode().compareTo(o2.getCode());
+                       }
+                   });
                    Map<String, Object> rates = new HashMap<>();
                    rates.put("rates", values);
                    result.put(ResponseField.result, rates);
@@ -92,12 +97,18 @@ public class RateController {
                 if(!currency.getCid().equals(baseCurrency.getCid())){
                     double currentToRate = rateService.getCurrentRate(currency);
                     if(fromCid != null){
-                        values.add(new RateResultBean(currency.getCid(), Utility.round(currentToRate / currentBaseRate, 5)));
+                        values.add(new RateResultBean(currency.getCid(), currency.getCode(), Utility.round(currentToRate / currentBaseRate, 5)));
                     }else if (toCid != null) {
-                        values.add(new RateResultBean(currency.getCid(), Utility.round(currentBaseRate / currentToRate, 5)));
+                        values.add(new RateResultBean(currency.getCid(), currency.getCode(), Utility.round(currentBaseRate / currentToRate, 5)));
                     }
                 }
             }
+            Collections.sort(values, new Comparator<RateResultBean>() {
+                @Override
+                public int compare(RateResultBean o1, RateResultBean o2) {
+                    return o1.getCode().compareTo(o2.getCode());
+                }
+            });
             Map<String, Object> rates = new HashMap<>();
             rates.put("rates", values);
             result.put(ResponseField.result, rates);

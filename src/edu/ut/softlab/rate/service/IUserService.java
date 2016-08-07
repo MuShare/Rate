@@ -4,6 +4,7 @@ import edu.ut.softlab.rate.bean.SubscribeBean;
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
 import edu.ut.softlab.rate.bean.UserBean;
 import edu.ut.softlab.rate.dao.common.IOperations;
+import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.model.User;
 
@@ -35,6 +36,7 @@ public interface IUserService extends IOperations<User> {
     SubscribeSyncBean getSubscribes(List<Subscribe> subscribes, Set<String> sids, int rev);
     List<Subscribe> getSubscribs(User user);
     void deleteSubscribe(Subscribe subscribe);
-    Map<String, Object> updateFavorite(List<String> addedCurrencies, List<String> deletedCurrencies, User user);
+    String deleteFavorite(Currency currency, User user);
+    String addFavorite(Currency currency, User user);
 }
 

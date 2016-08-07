@@ -52,4 +52,31 @@ response:
 
 uid
 
+4. favorite
+/user/favorite
+method: PUT
+parameter:
+    {"added":[],
+     "deleted":[]
+    }
+
+5. /user/subscribe
+method: POST
+parameter:
+boolean:
+isEnable
+isSendEmail
+isSendSms
+sname
+isAbove
+
+String:
+from
+to
+
+double:
+threshold
+
+
+
 
