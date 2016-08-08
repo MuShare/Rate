@@ -295,7 +295,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 		Currency toCurrency = currencyDao.findOne(toCid);
 		User user = userDao.findOne(uid);
 		int currentRev = user.getSubscribeRevision();
-		subscribe.setRevision(currentRev);
+		subscribe.setRevision(currentRev+1);
 		user.setSubscribeRevision(currentRev+1);
 		subscribe.setUser(user);
 		subscribe.setCurrency(fromCurrency);

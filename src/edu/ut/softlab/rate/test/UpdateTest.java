@@ -70,6 +70,6 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        updateData.addCurrencyAndRate("INR");
+        updateData.addCurrencyAndRate("BRL");
     }
 }

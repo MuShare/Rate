@@ -27,18 +27,6 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
 
     @Override
     public List<Rate> getLatestRates() {
-//        String dateHQL = "select max(date) from Rate";
-//        List dateList = getCurrentSesstion().createQuery(dateHQL).list();
-//        Date date = (Date)dateList.get(0);
-//        String hql = "from Rate where date = :date";
-//
-//        if(date != null){
-//            List<Rate> result = getCurrentSesstion().createQuery(hql).setString("date", date.toString()).list();
-//            return result;
-//        }else {
-//            return null;
-//        }
-
         DetachedCriteria maxDate = DetachedCriteria.forClass(Rate.class)
                 .setProjection(Projections.max("date"));
         Criteria criteria = getCurrentSesstion().createCriteria(Rate.class)
@@ -50,10 +38,10 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
     public Rate getLatestCurrencyRate(Currency currency) {
         DetachedCriteria maxDate = DetachedCriteria.forClass(Rate.class)
                 .setProjection(Projections.max("date"));
-        Criteria criteria1 = getCurrentSesstion().createCriteria(Rate.class);
-        criteria1.add(Restrictions.eq("currency", currency))
+        Criteria criteria = getCurrentSesstion().createCriteria(Rate.class);
+        criteria.add(Restrictions.eq("currency", currency))
                 .add(Property.forName("date").eq(maxDate));
-        return (Rate)criteria1.uniqueResult();
+        return (Rate)criteria.uniqueResult();
     }
 
     @Override

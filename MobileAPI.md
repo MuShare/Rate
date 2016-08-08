@@ -78,5 +78,23 @@ double:
 threshold
 
 
+6. /user/subscribes
+method: PUT
+
+parameter:
+{
+"sid":[]
+}
+
+response:
+
+isUpdated boolean
+
+data:
+createdOrUpdated:[subscribeBean]
+
+deletedSubscribes:[sids]
+
+rates:[{sid:rate}]
 
 

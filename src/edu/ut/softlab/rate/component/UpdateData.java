@@ -53,15 +53,13 @@ public class UpdateData {
 
 
 
-    public void createCurrency() {
-        for (Object currencyCode : supplement.values()) {
+    public void createCurrency(String code) {
             Currency currency = new Currency();
-            currency.setCode(currencyCode.toString());
-            if(currencyDao.queryList("code", currencyCode.toString()).size() == 0){
+            currency.setCode(code);
+            if(currencyDao.queryList("code", code.toString()).size() == 0){
                 dao.create(currency);
-                System.out.println(currencyCode+" created");
+                System.out.println(code+" created");
             }
-        }
     }
 
 
@@ -75,7 +73,7 @@ public class UpdateData {
             newCurrency.setRevision(currencyDao.getCurrentRev()+1);
             dao.create(newCurrency);
             System.out.println(code+" created");
-        }
+        
         Date latestUpdate;
         Calendar cl = Calendar.getInstance();
 
@@ -125,7 +123,7 @@ public class UpdateData {
                             long days = (current.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
                             try {
                                 if (days > 1) {
-                                    for (int j = 0; j < days - 1; j++) {
+                                    for (int j = 0; j < days; j++) {
                                         //插入空缺的
                                         Rate voidRate = new Rate();
                                         voidRate.setCurrency(currency);
@@ -160,10 +158,12 @@ public class UpdateData {
                     }
                 }
 
-
             //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
             updateOrCreateCurrentRate(rateService);
         supplement.put(code, code);
+        }else{
+            System.out.println(code+" is existing");
+        }
     }
 
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
@@ -196,7 +196,7 @@ public class UpdateData {
                             Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
                             long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
                             if (days > 1) {
-                                for (int j = 0; j < days - 1; j++) {
+                                for (int j = 0; j < days-1; j++) {
                                     //插入空缺的
                                     Rate voidRate = new Rate();
                                     voidRate.setCurrency(currency);
