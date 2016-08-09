@@ -27,7 +27,7 @@ public class Currency implements Serializable {
     private String code;
 
     @Column(name = "revision")
-    private Integer revision;
+    private Integer revision = 0;
 
     @OneToMany (mappedBy = "currency", cascade = CascadeType.ALL)
     private Set<Subscribe> fromCurrencySubscribes;

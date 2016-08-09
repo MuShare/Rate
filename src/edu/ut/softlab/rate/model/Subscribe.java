@@ -1,9 +1,7 @@
 package edu.ut.softlab.rate.model;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.directwebremoting.annotations.DataTransferObject;
 import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.*;
 import java.io.Serializable;
 

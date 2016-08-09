@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -47,6 +48,9 @@ public class UpdateData {
 
     @Resource(name = "currencyDao")
     private ICurrencyDao currencyDao;
+
+    @Resource(name = "serverConfig")
+    private ServerConfig serverConfig;
 
 
 
@@ -120,8 +124,8 @@ public class UpdateData {
                             Date current = new Date();
                             long days = (current.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
                             try {
-                                if (days > 1) {
-                                    for (int j = 0; j < days; j++) {
+                                if (days >= 1) {
+                                    for (int j = 0; j <= days-1; j++) {
                                         //插入空缺的
                                         Rate voidRate = new Rate();
                                         voidRate.setCurrency(currency);
@@ -167,6 +171,7 @@ public class UpdateData {
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
     @Transactional
     public void updateRate() {
+
         List<Rate> latestRates = rateService.getLatestRates();
         Date latestUpdate;
         Calendar cl = Calendar.getInstance();
@@ -258,51 +263,61 @@ public class UpdateData {
         }
     }
 
-//    @Scheduled(cron = "30 * * * * ? ") //每天十二点更新
-//    @Transactional
-//    public void notifyEmail() {
-//        List<User> users = userDao.findAll();
-//        for (User user : users) {
-//            Set<Subscribe> subscribes = user.getSubscribes();
-//            StringBuilder sb = new StringBuilder();
-//            sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
-//            System.out.println(sb);
-//            for (Subscribe subscribe : subscribes) {
-//                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
-//                        subscribe.getToCurrency().getCid());
-//
-//
-//                if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
-//                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-//                    + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
-//                    user.getDevices();
-//                    System.out.println(sb);
-//                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-//                    Thread notificationMailThread = new Thread(notification);
-//                    notificationMailThread.start();
-//                    for(Device device : user.getDevices()){
-//                        String token =device.getDeviceToken();
-//                        IPush iPush = new IPush(sb.toString(), token);
-//                        Thread pushThread = new Thread(iPush);
-//                        pushThread.start();
-//                    }
-//                }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
-//                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-//                            + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
-//                    System.out.println(sb);
-//                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-//                    Thread notificationMailThread = new Thread(notification);
-//                    notificationMailThread.start();
-//                    for(Device device : user.getDevices()){
-//                        String token =device.getDeviceToken();
-//                        IPush iPush = new IPush(sb.toString(), token);
-//                        Thread pushThread = new Thread(iPush);
-//                        pushThread.start();
-//                    }
-//                }
-//            }
-//        }
-//    }
+    @Scheduled(cron = "30 * * * * ? ") //每天十二点更新
+    @Transactional
+    public void notifyEmail() {
+
+
+
+        String certificate = serverConfig.getServerRootUrl()+"WEB-INF/classes/aps_development.p12";
+        System.out.println(certificate);
+
+        IPush iPush1 = new IPush("test test test", "dfa191b3 be5a8e73 75725771 a6f9fdcc 8ae771b1 bdc9f584 f138e6b2 e87945f2\n", certificate);
+        Thread pushThread1 = new Thread(iPush1);
+        pushThread1.start();
+
+        List<User> users = userDao.findAll();
+        for (User user : users) {
+            Set<Subscribe> subscribes = user.getSubscribes();
+            StringBuilder sb = new StringBuilder();
+            sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
+            System.out.println(sb);
+            for (Subscribe subscribe : subscribes) {
+                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
+                        subscribe.getToCurrency().getCid());
+
+
+                if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
+                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+                    + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
+                    user.getDevices();
+                    System.out.println(sb);
+                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                    Thread notificationMailThread = new Thread(notification);
+                    notificationMailThread.start();
+                    for(Device device : user.getDevices()){
+                        String token =device.getDeviceToken();
+                        IPush iPush = new IPush(sb.toString(), token, certificate);
+                        Thread pushThread = new Thread(iPush);
+                        pushThread.start();
+                    }
+                }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
+                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+                            + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
+                    System.out.println(sb);
+                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                    Thread notificationMailThread = new Thread(notification);
+                    notificationMailThread.start();
+                    for(Device device : user.getDevices()){
+                        String token =device.getDeviceToken();
+                        IPush iPush = new IPush(sb.toString(), token, certificate);
+                        Thread pushThread = new Thread(iPush);
+                        pushThread.start();
+                    }
+                }
+            }
+        }
+    }
 
     private class Notification implements Runnable{
         private String email;
@@ -324,15 +339,17 @@ public class UpdateData {
     private class IPush implements Runnable{
         private String content;
         private String token;
+        private String certificate;
 
-        public IPush(String content, String token){
+        public IPush(String content, String token, String certificate){
             this.content = content;
             this.token = token;
+            this.token = certificate;
         }
 
         @Override
         public void run() {
-            Utility.iphonePush(content, token);
+            Utility.iphonePush(content, token, certificate);
         }
     }
 }

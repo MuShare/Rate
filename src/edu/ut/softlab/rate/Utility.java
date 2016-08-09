@@ -233,10 +233,10 @@ public class Utility {
         return (double) tmp / factor;
     }
 
-    public static void iphonePush(String content, String token){
+    public static void iphonePush(String content, String token, String certificate){
         ApnsService service =
                 APNS.newService()
-                        .withCert("aps_development.p12", "")
+                        .withCert(certificate, "8eu3d7wn32")
                         .withSandboxDestination()
                         .build();
 
