@@ -4,10 +4,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import edu.ut.softlab.rate.Utility;
-import edu.ut.softlab.rate.bean.CurrencyBean;
-import edu.ut.softlab.rate.bean.SubscribeBean;
-import edu.ut.softlab.rate.bean.SubscribeSyncBean;
-import edu.ut.softlab.rate.bean.UserBean;
+import edu.ut.softlab.rate.bean.*;
 import edu.ut.softlab.rate.dao.*;
 import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.*;
@@ -142,7 +139,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 	@Override
 	public SubscribeSyncBean getSubscribes(List<Subscribe> subscribes, Set<String> sids, int rev) {
-		List<SubscribeBean> createdOrUpdated = new ArrayList<>();
+		List<SubscribeMobileBean> createdOrUpdated = new ArrayList<>();
 		List<String> deletedSubscribes = new ArrayList<>();
 		Map<String, Double> rates = new HashMap<>();
 
@@ -151,7 +148,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 		for(Subscribe subscribe : subscribes){
 			if(subscribe.getRevision() > rev){
-				createdOrUpdated.add(new SubscribeBean(subscribe));
+				createdOrUpdated.add(new SubscribeMobileBean(subscribe));
 			}
 			deletedSids.add(subscribe.getSid());
 		}
@@ -366,7 +363,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 			sb.append(user.getValidateCode());
 			sb.append("&uid=");
 			sb.append(user.getUid());
-			Thread sendMail = new Thread(new SendMail(user.getEmail(), sb.toString()));
+			Thread sendMail = new Thread(new SendMail(user.getEmail(), "Active your email",sb.toString()));
 			sendMail.start();
 			return user.getUid();
 		}else {
@@ -377,13 +374,15 @@ public class UserService extends AbstractService<User> implements IUserService {
 	private class SendMail implements Runnable{
 		private String email;
 		private String content;
-		public SendMail(String email, String content){
+		private String subject;
+		public SendMail(String email, String subject, String content){
 			this.email = email;
 			this.content = content;
+			this.subject = subject;
 		}
 		@Override
 		public void run() {
-			Utility.send(email, content);
+			Utility.send(email, subject, content);
 		}
 	}
 }

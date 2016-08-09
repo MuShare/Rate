@@ -7,15 +7,15 @@ import java.util.Map;
  * Created by alex on 16-8-5.
  */
 public class SubscribeSyncBean {
-    private List<SubscribeBean> createdOrUpdated;
+    private List<SubscribeMobileBean> createdOrUpdated;
     private List<String> deletedSubcribes;
     private Map<String, Double> rates;
 
-    public List<SubscribeBean> getCreatedOrUpdated() {
+    public List<SubscribeMobileBean> getCreatedOrUpdated() {
         return createdOrUpdated;
     }
 
-    public void setCreatedOrUpdated(List<SubscribeBean> createdOrUpdated) {
+    public void setCreatedOrUpdated(List<SubscribeMobileBean> createdOrUpdated) {
         this.createdOrUpdated = createdOrUpdated;
     }
 

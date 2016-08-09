@@ -1,6 +1,7 @@
 package edu.ut.softlab.rate;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
+
+
 import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.model.Currency;
 import org.apache.http.HttpEntity;
@@ -11,7 +12,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
@@ -22,12 +22,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.io.*;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import com.notnoop.apns.*;
 
 
 /**
@@ -68,7 +67,7 @@ public class Utility {
         return Session.getDefaultInstance(props , authenticator);
     }
 
-    public static void send(String toEmail , String content) {
+    public static void send(String toEmail , String subject, String content) {
         Session session = getSession();
         try {
             System.out.println("--send--"+content);
@@ -79,7 +78,7 @@ public class Utility {
             msg.setFrom(new InternetAddress(FROM));
             InternetAddress[] address = {new InternetAddress(toEmail)};
             msg.setRecipients(Message.RecipientType.TO, address);
-            msg.setSubject("Active your email");
+            msg.setSubject(subject);
             msg.setSentDate(new Date());
             msg.setContent(content , "text/html;charset=utf-8");
 
@@ -234,23 +233,14 @@ public class Utility {
         return (double) tmp / factor;
     }
 
-    public static String svgToString(String path){
-        File file = new File(path);
-        InputStreamReader reader = null;
-        StringBuilder sb = new StringBuilder();
-        try{
-            reader = new InputStreamReader(new FileInputStream(file));
-            BufferedReader br = new BufferedReader(reader);
-            String line = br.readLine();
+    public static void iphonePush(String content, String token){
+        ApnsService service =
+                APNS.newService()
+                        .withCert("aps_development.p12", "")
+                        .withSandboxDestination()
+                        .build();
 
-            while(line != null){
-                sb.append(line);
-                line = br.readLine();
-            }
-
-        }catch(Exception ex){
-            System.out.println(ex.toString());
-        }
-        return sb.toString();
+        String payload = APNS.newPayload().alertBody(content).build();
+        service.push(token, payload);
     }
 }

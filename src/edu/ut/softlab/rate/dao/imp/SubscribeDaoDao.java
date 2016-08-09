@@ -25,7 +25,6 @@ public class SubscribeDaoDao extends AbstractHibernateDao<Subscribe> implements 
     public List<Subscribe> getSubscribes(User user) {
         Criteria criteria = getCurrentSesstion().createCriteria(Subscribe.class);
         criteria.add(Restrictions.eq("user", user));
-        System.out.println(criteria.list().size());
         return criteria.list();
     }
 }

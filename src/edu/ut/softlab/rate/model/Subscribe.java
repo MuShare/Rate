@@ -40,25 +40,25 @@ public class Subscribe implements Serializable{
     private String sname;
 
     @Column(name="min")
-    private Double min;
+    private Double min = 0.0;
 
     @Column(name="max")
-    private Double max;
+    private Double max = 0.0;
 
     @Column(name="isenable")
-    private Boolean isEnable;
+    private Boolean isEnable = true;
 
     @Column(name="isOnce")
-    private Boolean isOnce;
+    private Boolean isOnce = true;
 
     @Column(name="isSendEmail")
-    private Boolean isSendEmail;
+    private Boolean isSendEmail = true;
 
     @Column(name="isSendSms")
-    private Boolean isSendSms;
+    private Boolean isSendSms = true;
 
     @Column(name="revision")
-    private Integer revision;
+    private Integer revision = 0;
 
     public Integer getRevision() {
         return revision;
