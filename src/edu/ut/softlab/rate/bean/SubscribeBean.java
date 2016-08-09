@@ -52,10 +52,18 @@ public class SubscribeBean {
         this.min = subscribe.getMin();
         this.max = subscribe.getMax();
         this.isEnable = subscribe.getIsEnable();
-        this.isOnce = subscribe.getIsOnce();
         this.isSendEmail = subscribe.getIsSendEmail();
         this.isSendSms = subscribe.getIsSendSms();
         threshold = (subscribe.getMin() != 0 ? subscribe.getMin() : subscribe.getMax());
+        System.out.println(threshold);
+    }
+
+    public double getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
     }
 
     public double getCurrent() {

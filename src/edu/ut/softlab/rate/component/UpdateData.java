@@ -5,10 +5,8 @@ import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.dao.IRateDao;
 import edu.ut.softlab.rate.dao.IUserDao;
+import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
-import edu.ut.softlab.rate.model.Rate;
-import edu.ut.softlab.rate.model.Subscribe;
-import edu.ut.softlab.rate.model.User;
 import edu.ut.softlab.rate.service.IRateService;
 import edu.ut.softlab.rate.service.imp.RateService;
 import org.springframework.beans.factory.annotation.Value;
@@ -260,22 +258,81 @@ public class UpdateData {
         }
     }
 
-    @Scheduled(cron = "0 40 19 * * *") //每天十二点更新
-    @Transactional
-    public void notifyEmail() {
-        List<User> users = userDao.findAll();
-        for (User user : users) {
-            Set<Subscribe> subscribes = user.getSubscribes();
-            StringBuilder sb = new StringBuilder();
-            for (Subscribe subscribe : subscribes) {
-                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
-                        subscribe.getToCurrency().getCid());
+//    @Scheduled(cron = "30 * * * * ? ") //每天十二点更新
+//    @Transactional
+//    public void notifyEmail() {
+//        List<User> users = userDao.findAll();
+//        for (User user : users) {
+//            Set<Subscribe> subscribes = user.getSubscribes();
+//            StringBuilder sb = new StringBuilder();
+//            sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
+//            System.out.println(sb);
+//            for (Subscribe subscribe : subscribes) {
+//                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
+//                        subscribe.getToCurrency().getCid());
+//
+//
+//                if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
+//                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+//                    + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
+//                    user.getDevices();
+//                    System.out.println(sb);
+//                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+//                    Thread notificationMailThread = new Thread(notification);
+//                    notificationMailThread.start();
+//                    for(Device device : user.getDevices()){
+//                        String token =device.getDeviceToken();
+//                        IPush iPush = new IPush(sb.toString(), token);
+//                        Thread pushThread = new Thread(iPush);
+//                        pushThread.start();
+//                    }
+//                }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
+//                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+//                            + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
+//                    System.out.println(sb);
+//                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+//                    Thread notificationMailThread = new Thread(notification);
+//                    notificationMailThread.start();
+//                    for(Device device : user.getDevices()){
+//                        String token =device.getDeviceToken();
+//                        IPush iPush = new IPush(sb.toString(), token);
+//                        Thread pushThread = new Thread(iPush);
+//                        pushThread.start();
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-                boolean inRange = (currentValue >= subscribe.getMin() && currentValue <= subscribe.getMax());
-                if(inRange != subscribe.getInRange()){
-                    Utility.send(subscribe.getUser().getEmail(), "Notify: ");
-                }
-            }
+    private class Notification implements Runnable{
+        private String email;
+        private String content;
+        private String subject;
+
+        public Notification(String email, String subject, String content){
+            this.email = email;
+            this.content = content;
+            this.subject = subject;
+
+        }
+        @Override
+        public void run() {
+            Utility.send(email, subject, content);
+        }
+    }
+
+    private class IPush implements Runnable{
+        private String content;
+        private String token;
+
+        public IPush(String content, String token){
+            this.content = content;
+            this.token = token;
+        }
+
+        @Override
+        public void run() {
+            Utility.iphonePush(content, token);
         }
     }
 }

@@ -47,17 +47,28 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private Set<Favorite> favorites;
 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private Set<Device> devices;
+
 	@Column(name="status")
-	private Boolean status;
+	private Boolean status = false;
 
 	@Column(name="validatecode", length = 225)
 	private String validateCode;
 
 	@Column(name = "favorite_revision")
-	private Integer favoriteRevision;
+	private Integer favoriteRevision = 0;
 
 	@Column(name = "subscribe_revision")
-	private Integer subscribeRevision;
+	private Integer subscribeRevision = 0;
+
+	public Set<Device> getDevices() {
+		return devices;
+	}
+
+	public void setDevices(Set<Device> devices) {
+		this.devices = devices;
+	}
 
 	public Integer getSubscribeRevision() {
 		return subscribeRevision;

@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
+import edu.ut.softlab.rate.model.Favorite;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IDeviceService;
@@ -81,6 +82,7 @@ public class UserController {
      * @return 实体
      */
     @RequestMapping(value="/login", method = RequestMethod.POST)
+    @Transactional
     public ResponseEntity<Map<String, Object>> firstLogin(@RequestParam(value = "email", required = true)String email,
                                                           @RequestParam(value = "password", required = true)String password,
                                                           @RequestParam(value = "device_token", required = true) String deviceToken,
@@ -120,6 +122,12 @@ public class UserController {
                 result.put("uname", user.getUname());
                 result.put("telephone", user.getTelephone());
                 result.put("email", user.getEmail());
+                Set<Favorite> favorites = user.getFavorites();
+                List<String> fav = new ArrayList<>();
+                for(Favorite favorite : favorites){
+                    fav.add(favorite.getCurrency().getCid());
+                }
+                result.put("favorite", fav);
                 response.put(ResponseField.result, result);
                 response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
                 return new ResponseEntity<>(response, HttpStatus.OK);
@@ -269,21 +277,20 @@ public class UserController {
     @RequestMapping(value = "/subscribes", method = RequestMethod.PUT)
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getSubscribes(@RequestBody String sidString,
-                                                             @RequestParam (value = "rev", required = true)Integer rev,
                                                              HttpServletRequest request) {
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
+        JSONObject params = new JSONObject(sidString);
+        int rev = params.getInt("rev");
         if(user != null){
             if(rev < user.getSubscribeRevision()){
-                JSONArray sidJSONArray = (new JSONObject(sidString)).getJSONArray("sids");
+                JSONArray sidJSONArray = params.getJSONArray("sids");
                 Set<String> sids = new HashSet<>();
                 for(Object sid : sidJSONArray){
                     sids.add(sid.toString());
                 }
-
-
                 SubscribeSyncBean subscribeSyncBean = userService.getSubscribes(userService.getSubscribs(user), sids, rev);
                 result.put("isUpdated", true);
                 result.put("data", subscribeSyncBean);
@@ -299,7 +306,7 @@ public class UserController {
         }else {
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.error_code, 350);
-            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
