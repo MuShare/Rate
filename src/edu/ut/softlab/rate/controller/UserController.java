@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
+import edu.ut.softlab.rate.model.Device;
 import edu.ut.softlab.rate.model.Favorite;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.service.ICurrencyService;
@@ -165,7 +166,6 @@ public class UserController {
         String currentToken = request.getHeader("token");
         String newToken = deviceService.updateToken(currentToken, deviceToken, ip);
         if(newToken == null){
-
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -178,6 +178,29 @@ public class UserController {
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+    }
+
+    @RequestMapping(value = "/logout", method = RequestMethod.DELETE)
+    public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request){
+        String token = request.getHeader("token");
+        List<Device> devices = deviceService.queryList("loginToken", token);
+        System.out.println(token);
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        if(devices.size() != 0){
+            Device device = devices.get(0);
+            device.setLoginToken(null);
+            deviceService.update(device);
+            result.put("status", "log out successfully");
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -218,7 +241,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(value="/subscribe", method = RequestMethod.PUT)
+    @RequestMapping(value="/subscribe/update", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> updateSubscribe(Subscribe subscribe,
                                                                @RequestParam(value = "isAbove", required = true)Boolean isAbove,
                                                                @RequestParam(value = "threshold", required = true)Double threshold,

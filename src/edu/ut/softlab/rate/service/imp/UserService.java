@@ -95,7 +95,8 @@ public class UserService extends AbstractService<User> implements IUserService {
 		}else if(users.get(0).getPassword().equals(password)){
 			//强制删除登录的情况
 			Device device = deviceService.findDeviceByDeviceId(deviceId);
-			if(device == null){
+			if(device == null ||
+					(device.getLoginToken() == null && device.getUser().getUid().equals(users.get(0).getUid()))){
 				device = new Device();
 				device.setDeviceToken(deviceToken);
 				device.setLastLoginTime(new Date());
@@ -127,6 +128,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 	public String updateSubscribe(Subscribe updateSubscribe) {
 		Subscribe subscribe = subscribeDao.findOne(updateSubscribe.getSid());
 		if(subscribe != null){
+			subscribe.setSname(updateSubscribe.getSname());
+			subscribe.setMax(updateSubscribe.getMax());
+			subscribe.setMin(updateSubscribe.getMin());
 			subscribe.setIsSendEmail(updateSubscribe.getIsSendEmail());
 			subscribe.setIsSendSms(updateSubscribe.getIsSendSms());
 			subscribe.setIsEnable(updateSubscribe.getIsEnable());

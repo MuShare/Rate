@@ -70,6 +70,12 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
+//        List<Currency> list = currencyService.getCurrencyList();
+//        for(Currency currency : list){
+//            currencyService.delete(currency);
+//        }
+
+        updateData.addCurrencyAndRate("RUB");
         updateData.addCurrencyAndRate("BRL");
     }
 }
