@@ -50,6 +50,7 @@
     <mvc:resources location="static/css/" mapping="/css/**"/>
     <mvc:resources location="static/js/" mapping="/js/**"/>
     <mvc:resources location="static/img/" mapping="/img/**" />
+    <mvc:resources location="static/avatar/" mapping="/avatar/**" />
 
     <!--<util:properties id="currency_zh_cn" location="static/resource/code.txt" />-->
  <!--val-->
@@ -73,6 +74,11 @@
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="maxInMemorySize" value="10240"/>
+        <property name="maxUploadSize" value="-1"/>
+    </bean>
 
     <!--<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" />-->
     <!--<import resource="/dwr.xml" />-->

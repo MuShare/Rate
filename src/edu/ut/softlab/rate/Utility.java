@@ -4,6 +4,7 @@ package edu.ut.softlab.rate;
 
 import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.model.Currency;
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -20,13 +21,16 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.*;
+import javax.imageio.ImageIO;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import com.notnoop.apns.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 /**
@@ -203,6 +207,42 @@ public class Utility {
         return result;
     }
 
+    public static Map<String, Double> getHistoryRateFromYahoo(String date){
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet("http://finance.yahoo.com/connection/currency-converter-cache?bypass=true&date="+date);
+        Map<String, Double> result = new HashMap<>();
+        try{
+            CloseableHttpResponse response = httpClient.execute(httpGet);
+            HttpEntity entity = response.getEntity();
+            InputStream is = entity.getContent();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            reader.readLine();
+            sb.append("{");
+            while((line = reader.readLine()) != null){
+                sb.append(line);
+            }
+            sb.delete(sb.length()-1,sb.length());
+            JSONObject jsonObject = new JSONObject(sb.toString());
+            JSONObject meta = jsonObject.getJSONObject("list").getJSONObject("meta");
+            if(meta.getInt("count") > 150){
+                return null;
+            }
+            JSONArray jsonArray = jsonObject.getJSONObject("list").getJSONArray("resources");
+            for(int i=0; i<jsonArray.length(); i++){
+                JSONObject fields = ((JSONObject)jsonArray.get(i)).getJSONObject("resource").getJSONObject("fields");
+                result.put(fields.getString("symbol"), fields.getDouble("price"));
+            }
+
+            EntityUtils.consume(entity);
+            response.close();
+        }catch (Exception ex){
+            System.out.println(ex.toString());
+        }
+        return result;
+    }
+
     public void updateRate(){
         ApplicationContext context = new ClassPathXmlApplicationContext("WEB-INF/mvc-dispatcher-servlet.xml", "WEB-INF/spring-hibernate.xml");
         BeanFactory factory = (BeanFactory)context;
@@ -234,6 +274,7 @@ public class Utility {
     }
 
     public static void iphonePush(String content, String token, String certificate){
+        System.out.println(certificate);
         ApnsService service =
                 APNS.newService()
                         .withCert(certificate, "8eu3d7wn32")
@@ -242,5 +283,33 @@ public class Utility {
 
         String payload = APNS.newPayload().alertBody(content).build();
         service.push(token, payload);
+    }
+
+    public static String imageStorage(String path, MultipartFile image){
+        try {
+            BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+            int width = bufferedImage.getWidth();
+            int height = bufferedImage.getHeight();
+            BufferedImage resized = null;
+            if(width > height){
+                resized = bufferedImage.getSubimage(0,0,height, height);
+            }else {
+                resized = bufferedImage.getSubimage(0,0,width,width);
+            }
+            BufferedImage thumbnail = Thumbnails.of(resized)
+                    .size(200, 200)
+                    .asBufferedImage();
+
+            String uuid = UUID.randomUUID().toString();
+            String contentType=image.getContentType();
+            String imageName=contentType.substring(contentType.indexOf("/")+1);
+            path = path + "/static/avatar/"+uuid;
+            File file = new File(path);
+            ImageIO.write(thumbnail,imageName, file);
+            path = "/static/avatar/"+uuid+"."+imageName;
+        }catch (Exception ex){
+            System.out.println(ex.toString());
+        }
+        return path;
     }
 }

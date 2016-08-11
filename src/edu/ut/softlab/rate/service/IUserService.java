@@ -7,6 +7,7 @@ import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.model.Subscribe;
 import edu.ut.softlab.rate.model.User;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
@@ -38,5 +39,10 @@ public interface IUserService extends IOperations<User> {
     void deleteSubscribe(Subscribe subscribe);
     String deleteFavorite(Currency currency, User user);
     String addFavorite(Currency currency, User user);
+    String addFeedback(User user, int type, String content, String contact);
+    String uploadImage(User user, String path, MultipartFile image);
+    String sendVerificationCode(User user);
+    Boolean changePassword(User user, String password);
+    void changeUname(User user, String uname);
 }
 

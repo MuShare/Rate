@@ -4,6 +4,7 @@ import org.directwebremoting.annotations.DataTransferObject;
 import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Created by alex on 16-4-11.
@@ -57,6 +58,18 @@ public class Subscribe implements Serializable{
 
     @Column(name="revision")
     private Integer revision = 0;
+
+    @Column(name = "date")
+    @Temporal(TemporalType.DATE)
+    private Date date;
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
     public Integer getRevision() {
         return revision;
