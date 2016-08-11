@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
+import edu.ut.softlab.rate.component.ServerConfig;
 import edu.ut.softlab.rate.model.Device;
 import edu.ut.softlab.rate.model.Favorite;
 import edu.ut.softlab.rate.model.Subscribe;
@@ -20,10 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import edu.ut.softlab.rate.model.User;
 import edu.ut.softlab.rate.service.IUserService;
 
+import java.io.File;
 import java.util.*;
 
 
@@ -146,7 +149,7 @@ public class UserController {
      * @param request 请求实体
      * @return 新token
      */
-    @RequestMapping(value = "/login", method = RequestMethod.PUT)
+    @RequestMapping(value = "/device_token", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> login(@RequestParam(value = "device_token", required = true)String deviceToken,
                                                      HttpServletRequest request){
         Map<String, Object> response = new HashMap<>();
@@ -340,7 +343,7 @@ public class UserController {
                                                                @RequestParam(value = "favorite", required = true) Boolean isFavorite,
                                                                HttpServletRequest request){
 
-        System.out.println(cid+" "+isFavorite);
+
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
         Map<String, Object> result = new HashMap<>();
@@ -353,6 +356,118 @@ public class UserController {
                 fid = userService.deleteFavorite(currencyService.findOne(cid), user);
             }
             result.put("fid", fid);
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(value = "/add_feedback", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> addFeedback(@RequestBody String feedback, HttpServletRequest request){
+        String token = request.getHeader("token");
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        User user = null;
+        if(token != null){
+            user = deviceService.findUserByToken(token);
+        }
+        JSONObject feedbackObject = new JSONObject(feedback);
+        String fdid = userService.addFeedback(user, feedbackObject.getInt("type"),
+                feedbackObject.getString("content"), feedbackObject.getString("contact"));
+        result.put("fdid", fdid);
+        response.put(ResponseField.result, result);
+        response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/upload_image", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam(value="file",required=false) MultipartFile file,
+                                                           HttpServletRequest request){
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        if(user != null){
+            String pathRoot = request.getSession().getServletContext().getRealPath("");
+            if(!file.isEmpty()){
+                userService.uploadImage(user, pathRoot, file);
+            }
+        }
+        return null;
+    }
+
+    @RequestMapping(value = "/verification_code", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, Object>> getVerificationCode(HttpServletRequest request){
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        if(token != null){
+            String code = userService.sendVerificationCode(user);
+            System.out.println(code);
+            result.put("status", "code has been sent");
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(value = "/change_password", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> changePass(@RequestParam (value = "password", required = true)String password,
+                                                          @RequestParam (value = "vertification_code", required = true)String vertificationCode,
+                                                          HttpServletRequest request){
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        if(user != null){
+            if(user.getVerificationCode().equals(vertificationCode)){
+                Date expiration = user.getCodeExpiration();
+                if(expiration.after(new Date())){
+                    userService.changePassword(user, password);
+                    result.put("status", "OK");
+                    response.put(ResponseField.result, result);
+                    response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }else {
+                    response.put(ResponseField.error_message, "expiration");
+                    response.put(ResponseField.error_code, 344);
+                    response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
+            }else {
+                response.put(ResponseField.error_message, "code invalid");
+                response.put(ResponseField.error_code, 343);
+                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(value = "/change_uname", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> changeUname(@RequestParam (value = "uname", required = true)String uname,
+                                                           HttpServletRequest request){
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        System.out.println(uname);
+        if(user != null){
+            userService.changeUname(user, uname);
+            result.put("status", "OK");
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);

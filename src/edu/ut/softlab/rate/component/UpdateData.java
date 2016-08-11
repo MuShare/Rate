@@ -68,64 +68,37 @@ public class UpdateData {
 
 
     @Transactional
-    public void addCurrencyAndRate(String code){
+    public void addCurrencyAndRate(String code) {
         Currency newCurrency = new Currency();
         newCurrency.setCode(code);
-        if(currencyDao.queryList("code", code).size() == 0){
-            newCurrency.setRevision(currencyDao.getCurrentRev()+1);
+        if (currencyDao.queryList("code", code).size() == 0) {
+            newCurrency.setRevision(currencyDao.getCurrentRev() + 1);
             dao.create(newCurrency);
-            System.out.println(code+" created");
-        
-        Date latestUpdate;
-        Calendar cl = Calendar.getInstance();
+            System.out.println(code + " created");
+
+            Date latestUpdate;
+            Calendar cl = Calendar.getInstance();
 
             latestUpdate = new GregorianCalendar(2013, 0, 0).getTime();
-                if(currencyDao.queryList("code", code).size() > 0){
-                    if (!code.equals("USD")) {
-                        ArrayList<String> result = Utility.postData(latestUpdate, code);
-                        if(result.size() > 20){
-                            System.out.println(result.size());
-                            Currency currency = dao.queryList("code", code).get(0);
-                            double preRate = 0;
-                            Date preDate = latestUpdate;
+            if (currencyDao.queryList("code", code).size() > 0) {
+                if (!code.equals("USD")) {
+                    ArrayList<String> result = Utility.postData(latestUpdate, code);
+                    if (result.size() > 20) {
+                        System.out.println(result.size());
+                        Currency currency = dao.queryList("code", code).get(0);
+                        double preRate = 0;
+                        Date preDate = latestUpdate;
 
-                            for (int i = 2; i < result.size() - 1; i++) {
-                                if(code.equals("CNY")){
-                                    System.out.println(result.get(i));
-                                }
-                                Rate rate = new Rate();
-                                rate.setCurrency(currency);
-                                String[] data = result.get(i).split(" ");
+                        for (int i = 2; i < result.size() - 1; i++) {
+                            Rate rate = new Rate();
+                            rate.setCurrency(currency);
+                            String[] data = result.get(i).split(" ");
 
-                                try {
-                                    Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
-                                    long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
-                                    if (days > 1) {
-                                        for (int j = 0; j < days - 1; j++) {
-                                            //插入空缺的
-                                            Rate voidRate = new Rate();
-                                            voidRate.setCurrency(currency);
-                                            voidRate.setValue(preRate);
-                                            cl.setTime(preDate);
-                                            cl.add(Calendar.DATE, j + 1);
-                                            voidRate.setDate(cl.getTime());
-                                            rateDao.create(voidRate);
-                                        }
-                                    }
-                                    rate.setDate(date);
-                                    rate.setValue(Double.parseDouble(data[3]));
-                                    rateDao.create(rate);
-                                    preDate = rate.getDate();
-                                    preRate = rate.getValue();
-                                } catch (Exception ex) {
-                                    System.out.println("date error "+ code);
-                                }
-                            }
-                            Date current = new Date();
-                            long days = (current.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
                             try {
-                                if (days >= 1) {
-                                    for (int j = 0; j <= days-1; j++) {
+                                Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
+                                long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
+                                if (days > 1) {
+                                    for (int j = 0; j < days - 1; j++) {
                                         //插入空缺的
                                         Rate voidRate = new Rate();
                                         voidRate.setCurrency(currency);
@@ -136,41 +109,81 @@ public class UpdateData {
                                         rateDao.create(voidRate);
                                     }
                                 }
+                                rate.setDate(date);
+                                rate.setValue(Double.parseDouble(data[3]));
+                                rateDao.create(rate);
+                                preDate = rate.getDate();
+                                preRate = rate.getValue();
                             } catch (Exception ex) {
-                                currencyDao.delete(newCurrency);
-                                System.out.println("date error "+ code+" will be deleted");
+                                System.out.println("date error " + code);
                             }
-                            try {
-                                File supplement = new File("src/rate_supplement.properties");
-                                FileWriter fileWriter = new FileWriter(supplement, true);
-                                BufferedWriter writer = new BufferedWriter(fileWriter);
-                                writer.write(code+" = "+code+"\n");
-                                writer.flush();
-                                writer.close();
-                            }catch (Exception ex){
-                                System.out.println(ex.toString());
-                            }
-
-
-
-                        }else {
-                            currencyDao.delete(newCurrency);
-                            System.out.println("error"+ newCurrency.getCode()+ " is deleted");
                         }
+
+
+                        SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");
+                        cl.setTime(preDate);
+                        System.out.println(cl.get(Calendar.DATE));
+                        Calendar current = Calendar.getInstance();
+
+                        if (current.get(Calendar.DATE) - cl.get(Calendar.DATE) >= 1) {
+                            cl.add(Calendar.DATE, 1);
+                            while (cl.get(Calendar.DATE) <= current.get(Calendar.DATE)) {
+                                Map<String, Double> historyRate = Utility.getHistoryRateFromYahoo(yahooSf.format(cl.getTime()));
+                                if (historyRate != null) {
+                                    String currencyCodeStr = currency.getCode();
+                                    if (historyRate.containsKey(currencyCodeStr + "=X")) {
+                                        double rateValue = historyRate.get(currencyCodeStr + "=X");
+                                        Rate lostRate = new Rate();
+                                        lostRate.setCurrency(currency);
+                                        lostRate.setValue(rateValue);
+                                        lostRate.setDate(cl.getTime());
+                                        rateService.create(lostRate);
+                                    } else {
+                                        System.out.println(currencyCodeStr);
+                                    }
+                                }else {
+                                    Map<String, Double> todayRate = Utility.getRateData();
+                                    double rateValue = todayRate.get("USD/" + currency.getCode());
+                                    Rate lostRate = new Rate();
+                                    lostRate.setValue(rateValue);
+                                    Calendar rateCl = Calendar.getInstance();
+                                    rateCl.setTime(cl.getTime());
+                                    rateCl.add(Calendar.DATE, 1);
+                                    lostRate.setDate(rateCl.getTime());
+                                    rateService.create(lostRate);
+                                    System.out.println(lostRate.getDate());
+                                }
+                                cl.add(Calendar.DATE, 1);
+                            }
+                        }
+                        try {
+                            File supplement = new File("src/rate_supplement.properties");
+                            FileWriter fileWriter = new FileWriter(supplement, true);
+                            BufferedWriter writer = new BufferedWriter(fileWriter);
+                            writer.write(code + " = " + code + "\n");
+                            writer.flush();
+                            writer.close();
+                        } catch (Exception ex) {
+                            System.out.println(ex.toString());
+                        }
+
+                    } else {
+                        currencyDao.delete(newCurrency);
+                        System.out.println("error" + newCurrency.getCode() + " is deleted");
                     }
                 }
-
-            //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
-            updateOrCreateCurrentRate(rateService);
-        supplement.put(code, code);
-        }else{
-            System.out.println(code+" is existing");
+            }
+        } else {
+            System.out.println(code + " is existing");
         }
     }
+
 
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
     @Transactional
     public void updateRate() {
+
+        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 
         List<Rate> latestRates = rateService.getLatestRates();
         Date latestUpdate;
@@ -188,15 +201,13 @@ public class UpdateData {
                     Date preDate = latestUpdate;
 
                     for (int i = 2; i < result.size() - 1; i++) {
-                        if(currencyCodeStr.equals("CNY")){
-                            System.out.println(result.get(i));
-                        }
+
                         Rate rate = new Rate();
                         rate.setCurrency(currency);
                         String[] data = result.get(i).split(" ");
 
                         try {
-                            Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
+                            Date date = sf.parse(data[1]);
                             long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
                             if (days > 1) {
                                 for (int j = 0; j < days-1; j++) {
@@ -223,7 +234,7 @@ public class UpdateData {
             }
             //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
             updateOrCreateCurrentRate(rateService);
-        } else {
+        }else {
             updateOrCreateCurrentRate(rateService);
         }
     }
@@ -244,8 +255,43 @@ public class UpdateData {
                 rateDao.update(rate);
             }
         } else {
+            SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");
+            Calendar cl = Calendar.getInstance();
+            cl.setTime(latestRates.get(0).getDate());
+            Date date = new Date();
+
+            if((date.getTime() - cl.getTime().getTime()) / (24 * 60 * 60 * 1000) > 1){
+                cl.add(Calendar.DATE, 1);
+                while(!yahooSf.format(date).equals(yahooSf.format(cl.getTime()))){
+                    Map<String, Double> historyRate = Utility.getHistoryRateFromYahoo(yahooSf.format(cl.getTime()));
+                    if(historyRate != null){
+                        for (Rate rate : latestRates) {
+                            String currencyCodeStr = rate.getCurrency().getCode();
+                            if (!currencyCodeStr.equals("USD")) {
+                                Currency currency = dao.queryList("code", currencyCodeStr).get(0);
+                                System.out.println(currencyCodeStr+"=X");
+                                if(historyRate.containsKey(currencyCodeStr+"=X")){
+                                    double rateValue = historyRate.get(currencyCodeStr+"=X");
+                                    Rate lostRate = new Rate();
+                                    lostRate.setCurrency(currency);
+                                    lostRate.setValue(rateValue);
+                                    lostRate.setDate(cl.getTime());
+                                    rateService.create(lostRate);
+                                }else {
+                                    System.out.println(currencyCodeStr);
+                                }
+                            }
+                        }
+                        System.out.println(cl.getTime());
+                    }
+                    cl.add(Calendar.DATE, 1);
+                    System.out.println("void");
+                }
+            }
+
             for (Rate rate : latestRates) {
                 String currencyCodeStr = rate.getCurrency().getCode();
+
                 if (!currencyCodeStr.equals("USD")) {
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
                     if(todayRate.containsKey("USD/" + currencyCodeStr)){
@@ -267,10 +313,7 @@ public class UpdateData {
     @Transactional
     public void notifyEmail() {
 
-
-
-        String certificate = serverConfig.getServerRootUrl()+"WEB-INF/classes/aps_development.p12";
-        System.out.println(certificate);
+        String certificate = "classes/aps_development.p12";
 
         IPush iPush1 = new IPush("test test test", "dfa191b3 be5a8e73 75725771 a6f9fdcc 8ae771b1 bdc9f584 f138e6b2 e87945f2\n", certificate);
         Thread pushThread1 = new Thread(iPush1);
@@ -281,38 +324,40 @@ public class UpdateData {
             Set<Subscribe> subscribes = user.getSubscribes();
             StringBuilder sb = new StringBuilder();
             sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
-            System.out.println(sb);
+
             for (Subscribe subscribe : subscribes) {
-                double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
-                        subscribe.getToCurrency().getCid());
+                if(subscribe.getIsEnable()){
+                    System.out.println("sub");
+                    double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
+                            subscribe.getToCurrency().getCid());
 
 
-                if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
-                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-                    + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
-                    user.getDevices();
-                    System.out.println(sb);
-                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                    Thread notificationMailThread = new Thread(notification);
-                    notificationMailThread.start();
-                    for(Device device : user.getDevices()){
-                        String token =device.getDeviceToken();
-                        IPush iPush = new IPush(sb.toString(), token, certificate);
-                        Thread pushThread = new Thread(iPush);
-                        pushThread.start();
-                    }
-                }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
-                    sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-                            + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
-                    System.out.println(sb);
-                    Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                    Thread notificationMailThread = new Thread(notification);
-                    notificationMailThread.start();
-                    for(Device device : user.getDevices()){
-                        String token =device.getDeviceToken();
-                        IPush iPush = new IPush(sb.toString(), token, certificate);
-                        Thread pushThread = new Thread(iPush);
-                        pushThread.start();
+                    if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
+                        sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+                                + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
+                        subscribe.setIsEnable(false);
+                        Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                        Thread notificationMailThread = new Thread(notification);
+                        notificationMailThread.start();
+                        for(Device device : user.getDevices()){
+                            String token =device.getDeviceToken();
+                            IPush iPush = new IPush(sb.toString(), token, certificate);
+                            Thread pushThread = new Thread(iPush);
+                            pushThread.start();
+                        }
+                    }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
+                        sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
+                                + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
+                        subscribe.setIsEnable(false);
+                        Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                        Thread notificationMailThread = new Thread(notification);
+                        notificationMailThread.start();
+                        for(Device device : user.getDevices()){
+                            String token =device.getDeviceToken();
+                            IPush iPush = new IPush(sb.toString(), token, certificate);
+                            Thread pushThread = new Thread(iPush);
+                            pushThread.start();
+                        }
                     }
                 }
             }

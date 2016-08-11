@@ -50,6 +50,9 @@ public class User implements Serializable {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	private Set<Device> devices;
 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private Set<Feedback> feedbacks;
+
 	@Column(name="status")
 	private Boolean status = false;
 
@@ -61,6 +64,48 @@ public class User implements Serializable {
 
 	@Column(name = "subscribe_revision")
 	private Integer subscribeRevision = 0;
+
+    @Column(name = "avatar")
+    private String avatar;
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "code_expiration")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date codeExpiration;
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public Date getCodeExpiration() {
+        return codeExpiration;
+    }
+
+    public void setCodeExpiration(Date codeExpiration) {
+        this.codeExpiration = codeExpiration;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public Set<Feedback> getFeedbacks() {
+		return feedbacks;
+	}
+
+	public void setFeedbacks(Set<Feedback> feedbacks) {
+		this.feedbacks = feedbacks;
+	}
 
 	public Set<Device> getDevices() {
 		return devices;

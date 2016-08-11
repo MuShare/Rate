@@ -16,6 +16,7 @@ import edu.ut.softlab.rate.service.common.AbstractService;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -46,6 +47,9 @@ public class UserService extends AbstractService<User> implements IUserService {
 
 	@Resource(name = "favoriteDao")
 	private IFavoriteDao favoriteDao;
+
+	@Resource(name = "feedbackDao")
+	private IFeedbackDao feedbackDao;
 	
 	public UserService(){
 		super();
@@ -199,6 +203,62 @@ public class UserService extends AbstractService<User> implements IUserService {
 	}
 
 	@Override
+	public String addFeedback(User user, int type, String content, String contact) {
+		Feedback feedback = new Feedback();
+		feedback.setUser(user);
+        feedback.setType(type);
+        feedback.setContent(content);
+        feedback.setContact(contact);
+        feedback.setDate(new Date());
+        feedbackDao.create(feedback);
+		return feedback.getFdid();
+	}
+
+    @Override
+    public String uploadImage(User user, String path, MultipartFile image) {
+        String storedPath = Utility.imageStorage(path, image);
+        user.setAvatar(storedPath);
+        update(user);
+        return storedPath;
+    }
+
+    @Override
+    public String sendVerificationCode(User user) {
+        Set<Integer> codes = new HashSet<>();
+        Random r = new Random();
+        while (codes.size() < 4){
+            codes.add(r.nextInt(10));
+        }
+        StringBuilder sb = new StringBuilder();
+        for(Integer i : codes){
+            sb.append(i);
+        }
+        SendVerifyCode sendVerifyCode = new SendVerifyCode(user.getEmail(), sb.toString());
+        Thread sendCodeThread = new Thread(sendVerifyCode);
+        sendCodeThread.start();
+        user.setValidateCode(sb.toString());
+        Calendar cl = Calendar.getInstance();
+        cl.add(Calendar.MINUTE, 30);
+        user.setCodeExpiration(cl.getTime());
+        user.setVerificationCode(sb.toString());
+        update(user);
+        return sb.toString();
+    }
+
+    @Override
+    public Boolean changePassword(User user, String password) {
+        user.setPassword(password);
+        update(user);
+        return true;
+    }
+
+    @Override
+    public void changeUname(User user, String uname) {
+        user.setUname(uname);
+        update(user);
+    }
+
+    @Override
 	@RemoteMethod
 	public boolean login(String email, String password, HttpSession session) {
 		List<User> result = userDao.queryList("email", email);
@@ -212,8 +272,6 @@ public class UserService extends AbstractService<User> implements IUserService {
 		}
 		return false;
 	}
-
-
 
 	@Override
 	@RemoteMethod
@@ -301,6 +359,7 @@ public class UserService extends AbstractService<User> implements IUserService {
 		subscribe.setUser(user);
 		subscribe.setCurrency(fromCurrency);
 		subscribe.setToCurrency(toCurrency);
+        subscribe.setDate(new Date());
 		subscribeDao.create(subscribe);
 		return subscribe.getSid();
 	}
@@ -389,4 +448,18 @@ public class UserService extends AbstractService<User> implements IUserService {
 			Utility.send(email, subject, content);
 		}
 	}
+
+    private class SendVerifyCode implements Runnable{
+        private String email;
+        private String code;
+        public SendVerifyCode(String email, String code){
+            this.email = email;
+            this.code = code;
+        }
+
+        @Override
+        public void run() {
+            Utility.send(email, "Verification Code", code);
+        }
+    }
 }
