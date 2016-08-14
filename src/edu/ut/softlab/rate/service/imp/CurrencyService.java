@@ -1,5 +1,6 @@
 package edu.ut.softlab.rate.service.imp;
 
+import edu.ut.softlab.rate.component.UpdateData;
 import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.Currency;
@@ -21,6 +22,9 @@ public class CurrencyService  extends AbstractService<Currency> implements ICurr
     @Resource(name="currencyDao")
     private ICurrencyDao currencyDao;
 
+    @Resource(name = "updateData")
+    private UpdateData updateData;
+
     @Override
     protected IOperations<Currency> getDao() {
         return currencyDao;
@@ -40,5 +44,10 @@ public class CurrencyService  extends AbstractService<Currency> implements ICurr
     @Override
     public int getCurrentRevision() {
         return currencyDao.getCurrentRev();
+    }
+
+    @Override
+    public String addCurrency(String code) {
+        return updateData.addCurrencyAndRate(code);
     }
 }

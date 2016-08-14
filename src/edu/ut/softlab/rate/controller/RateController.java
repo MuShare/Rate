@@ -87,6 +87,12 @@ public class RateController {
            }
         }else if(fromCid == null || toCid == null){
             String baseCid = fromCid != null ? fromCid : toCid;
+            if(baseCid == null){
+                result.put(ResponseField.error_code, 344);
+                result.put(ResponseField.error_message, "fromCid and toCid should not be null at the same time");
+                result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
+            }
             Currency baseCurrency = currencyService.findOne(baseCid);
             double currentBaseRate = rateService.getCurrentRate(baseCurrency);
             List<Currency> currencyList = currencyService.getCurrencyList();
@@ -96,7 +102,7 @@ public class RateController {
                     double currentToRate = rateService.getCurrentRate(currency);
                     if(fromCid != null){
                         values.put(currency.getCid(), Utility.round(currentToRate / currentBaseRate, 5));
-                    }else if (toCid != null) {
+                    }else{
                         values.put(currency.getCid(), Utility.round(currentBaseRate / currentToRate, 5));
                     }
                 }
@@ -137,13 +143,13 @@ public class RateController {
             result.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
         }
-        String startDateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date(startTime));
-        String endDateStr = new SimpleDateFormat("yyyy-MM-dd").format(new Date(endTime));
-        ChartData chartData = rateService.getHistoryRate(startDateStr, endDateStr, fromCid, toCid);
+        ChartData chartData = rateService.getHistoryRate(startTime, endTime, fromCid, toCid);
         result.put(ResponseField.result, chartData);
         result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+
 }
 
 

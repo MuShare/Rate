@@ -12,4 +12,5 @@ public interface ICurrencyService  extends IOperations<Currency> {
     List<Currency> getCurrencyList();
     List<Currency> getUpdatedCurrencies(int rev);
     int getCurrentRevision();
+    String addCurrency(String code);
 }

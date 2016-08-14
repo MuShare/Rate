@@ -70,4 +70,13 @@ public class CurrencyController {
             }
         }
     }
+
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> addCurrency(@RequestParam(value = "code", required = true)String code){
+        Map<String, Object> result = new HashMap<>();
+        String message = currencyService.addCurrency(code);
+        result.put(ResponseField.result, message);
+        result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 }

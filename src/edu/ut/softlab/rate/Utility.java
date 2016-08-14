@@ -141,6 +141,7 @@ public class Utility {
         }
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
+        cal.setTimeZone(TimeZone.getTimeZone("UTC"));
         List<org.apache.http.NameValuePair> nvps = new ArrayList<>();
         nvps.add(new BasicNameValuePair("b","USD"));
         nvps.add(new BasicNameValuePair("c",currencyCode));
@@ -311,5 +312,15 @@ public class Utility {
             System.out.println(ex.toString());
         }
         return path;
+    }
+
+    public static long getZeroTime(Date date){
+        Calendar cl = Calendar.getInstance();
+        cl.setTime(date);
+        cl.set(Calendar.HOUR_OF_DAY, 0);
+        cl.set(Calendar.MINUTE, 0);
+        cl.set(Calendar.SECOND, 0);
+        cl.set(Calendar.MILLISECOND, 0);
+        return cl.getTimeInMillis();
     }
 }

@@ -12,10 +12,10 @@ import java.util.List;
  * Created by alex on 16-4-17.
  */
 public interface IRateService extends IOperations<Rate> {
-    ChartData getHistoryRate(String start, String end, String inCurrency, String outCurrency);
+    ChartData getHistoryRate(long start, long end, String inCurrency, String outCurrency);
     double getCurrentRate(String fromCurrency, String toCurrency);
     ChartData getSpecificRate(String start, String end, String currencyCid);
-    ChartData getSpecificRate(Date start, Date end, Currency currency);
+    ChartData getSpecificRate(long start, long end, Currency currency);
     double getCurrentRate(Currency currency);
     List<Rate> getLatestRates();
 }

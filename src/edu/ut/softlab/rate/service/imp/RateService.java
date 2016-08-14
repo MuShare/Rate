@@ -39,20 +39,13 @@ public class RateService extends AbstractService<Rate> implements IRateService {
 
     @Override
     @RemoteMethod
-    public ChartData getHistoryRate(String start, String end, String inCurrencyId, String outCurrencyId) {
+    public ChartData getHistoryRate(long start, long end, String inCurrencyId, String outCurrencyId) {
         ChartData chartData = new ChartData();
         Currency inCurrency = currencyDao.findOne(inCurrencyId);
         Currency outCurrency = currencyDao.findOne(outCurrencyId);
-        Date startDate=null, endDate=null;
-        try{
-            startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
-            endDate = new SimpleDateFormat("yyyy-MM-dd").parse(end);
-            chartData.setTime(startDate.getTime());
-        }catch (Exception ex){
-            System.out.println(ex.toString());
-        }
-        List<Rate> inCurrencyRateList = rateDao.getSpecificRateList(startDate, endDate, inCurrency);
-        List<Rate> outCurrencyRateList = rateDao.getSpecificRateList(startDate, endDate, outCurrency);
+
+        List<Rate> inCurrencyRateList = rateDao.getSpecificRateList(start, end, inCurrency);
+        List<Rate> outCurrencyRateList = rateDao.getSpecificRateList(start, end, outCurrency);
 
         chartData.setInCurrency(inCurrency.getCode());
         chartData.setOutCurrency(outCurrency.getCode());
@@ -106,7 +99,7 @@ public class RateService extends AbstractService<Rate> implements IRateService {
     }
 
     @Override
-    public ChartData getSpecificRate(Date start, Date end, Currency currency){
+    public ChartData getSpecificRate(long start, long end, Currency currency){
         ChartData chartData = new ChartData();
         List<Rate> rateList = rateDao.getSpecificRateList(start, end, currency);
         List<Double> rateValues = new ArrayList<>();
@@ -114,7 +107,7 @@ public class RateService extends AbstractService<Rate> implements IRateService {
             rateValues.add(rate.getValue());
         }
         chartData.setData(rateValues);
-        chartData.setTime(start.getTime());
+        chartData.setTime(start);
         return chartData;
     }
 

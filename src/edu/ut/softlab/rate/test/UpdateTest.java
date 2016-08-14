@@ -2,6 +2,7 @@ package edu.ut.softlab.rate.test;
 
 
 import edu.ut.softlab.rate.Utility;
+import edu.ut.softlab.rate.bean.ChartData;
 import edu.ut.softlab.rate.component.UpdateData;
 import edu.ut.softlab.rate.controller.RateController;
 import edu.ut.softlab.rate.dao.ICurrencyDao;
@@ -71,8 +72,9 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        updateData.addCurrencyAndRate("MAD");
-
-
+        Currency currency = currencyService.findOne("ff8081815688259c01568825ae7f0000");
+        Currency currency1 = currencyService.findOne("ff808181568827c601568827d7450000");
+        ChartData result = rateService.getHistoryRate(1438354800000L, 1469977200000L, "ff808181568827c601568827d7450000", "ff8081815688259c01568825ae7f0000");
+        System.out.println(result.getData());
     }
 }

@@ -68,18 +68,22 @@ public class UpdateData {
 
 
     @Transactional
-    public void addCurrencyAndRate(String code) {
+    public String addCurrencyAndRate(String code) {
+        String resultMessage = "";
         Currency newCurrency = new Currency();
         newCurrency.setCode(code);
         if (currencyDao.queryList("code", code).size() == 0) {
             newCurrency.setRevision(currencyDao.getCurrentRev() + 1);
             dao.create(newCurrency);
-            System.out.println(code + " created");
+            System.out.println(code + " created "+newCurrency.getCid());
 
+
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
             Date latestUpdate;
             Calendar cl = Calendar.getInstance();
-
-            latestUpdate = new GregorianCalendar(2013, 0, 0).getTime();
+            cl.set(2013, Calendar.JANUARY, 1);
+            cl.setTimeInMillis(Utility.getZeroTime(cl.getTime()));
+            latestUpdate = cl.getTime();
             if (currencyDao.queryList("code", code).size() > 0) {
                 if (!code.equals("USD")) {
                     ArrayList<String> result = Utility.postData(latestUpdate, code);
@@ -103,7 +107,7 @@ public class UpdateData {
                                         Rate voidRate = new Rate();
                                         voidRate.setCurrency(currency);
                                         voidRate.setValue(preRate);
-                                        cl.setTime(preDate);
+                                        cl.setTimeInMillis(preDate.getTime());
                                         cl.add(Calendar.DATE, j + 1);
                                         voidRate.setDate(cl.getTime());
                                         rateDao.create(voidRate);
@@ -116,6 +120,7 @@ public class UpdateData {
                                 preRate = rate.getValue();
                             } catch (Exception ex) {
                                 System.out.println("date error " + code);
+                                resultMessage = "date error " + code;
                             }
                         }
 
@@ -139,19 +144,19 @@ public class UpdateData {
                                         lostRate.setDate(cl.getTime());
                                         rateService.create(lostRate);
                                     } else {
-                                        System.out.println(currencyCodeStr);
+                                        System.out.println(currencyCodeStr+" doesn't include");
+                                        resultMessage = currencyCodeStr+" doesn't include";
                                     }
                                 }else {
                                     Map<String, Double> todayRate = Utility.getRateData();
                                     double rateValue = todayRate.get("USD/" + currency.getCode());
                                     Rate lostRate = new Rate();
                                     lostRate.setValue(rateValue);
-                                    Calendar rateCl = Calendar.getInstance();
-                                    rateCl.setTime(cl.getTime());
-                                    rateCl.add(Calendar.DATE, 1);
-                                    lostRate.setDate(rateCl.getTime());
+                                    lostRate.setDate(cl.getTime());
+                                    lostRate.setCurrency(currency);
                                     rateService.create(lostRate);
                                     System.out.println(lostRate.getDate());
+                                    resultMessage = lostRate.getDate().toString();
                                 }
                                 cl.add(Calendar.DATE, 1);
                             }
@@ -170,73 +175,22 @@ public class UpdateData {
                     } else {
                         currencyDao.delete(newCurrency);
                         System.out.println("error" + newCurrency.getCode() + " is deleted");
+                        resultMessage = "error" + newCurrency.getCode() + " is deleted";
                     }
                 }
             }
         } else {
             System.out.println(code + " is existing");
+            resultMessage = code + " is existing";
         }
+        return resultMessage;
     }
 
 
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
     @Transactional
     public void updateRate() {
-
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-
-        List<Rate> latestRates = rateService.getLatestRates();
-        Date latestUpdate;
-        Calendar cl = Calendar.getInstance();
-
-        if (latestRates.size() == 0) {
-            latestUpdate = new GregorianCalendar(2013, 0, 0).getTime();
-            for (Object currencyCode : supplement.values()) {
-                String currencyCodeStr = currencyCode.toString();
-                if (!currencyCodeStr.equals("USD")) {
-                    ArrayList<String> result = Utility.postData(latestUpdate, currencyCodeStr);
-                    System.out.println(result.size());
-                    Currency currency = dao.queryList("code", currencyCodeStr).get(0);
-                    double preRate = 0;
-                    Date preDate = latestUpdate;
-
-                    for (int i = 2; i < result.size() - 1; i++) {
-
-                        Rate rate = new Rate();
-                        rate.setCurrency(currency);
-                        String[] data = result.get(i).split(" ");
-
-                        try {
-                            Date date = sf.parse(data[1]);
-                            long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
-                            if (days > 1) {
-                                for (int j = 0; j < days-1; j++) {
-                                    //插入空缺的
-                                    Rate voidRate = new Rate();
-                                    voidRate.setCurrency(currency);
-                                    voidRate.setValue(preRate);
-                                    cl.setTime(preDate);
-                                    cl.add(Calendar.DATE, j + 1);
-                                    voidRate.setDate(cl.getTime());
-                                    rateDao.create(voidRate);
-                                }
-                            }
-                            rate.setDate(date);
-                            rate.setValue(Double.parseDouble(data[3]));
-                            rateDao.create(rate);
-                            preDate = rate.getDate();
-                            preRate = rate.getValue();
-                        } catch (Exception ex) {
-                            System.out.println("date error "+ currencyCodeStr);
-                        }
-                    }
-                }
-            }
-            //马上更新最新的汇率，如果之前没有获取到当天，则创建今天的Rate记录
             updateOrCreateCurrentRate(rateService);
-        }else {
-            updateOrCreateCurrentRate(rateService);
-        }
     }
 
     /**
@@ -244,11 +198,13 @@ public class UpdateData {
      * @param rateService rateservice
      */
     public void updateOrCreateCurrentRate(IRateService rateService){
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Map<String, Double> todayRate = Utility.getRateData();
         List<Rate> latestRates = rateService.getLatestRates();
-
-        if (latestRates.get(0).getDate().toString().
-                equals(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {
+        Date date = new Date();
+        long currentMilliSeconds = Utility.getZeroTime(date);
+        long lastMilliSeconds = latestRates.get(0).getDate().getTime();
+        if (currentMilliSeconds == lastMilliSeconds) {
             System.out.println("yahoo update");
             for (Rate rate : latestRates) {
                 rate.setValue(todayRate.get("USD/" + rate.getCurrency().getCode()));
@@ -257,10 +213,9 @@ public class UpdateData {
         } else {
             SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");
             Calendar cl = Calendar.getInstance();
-            cl.setTime(latestRates.get(0).getDate());
-            Date date = new Date();
+            cl.setTimeInMillis(lastMilliSeconds);
 
-            if((date.getTime() - cl.getTime().getTime()) / (24 * 60 * 60 * 1000) > 1){
+            if((date.getTime() - cl.getTimeInMillis()) / (24 * 60 * 60 * 1000) > 1){
                 cl.add(Calendar.DATE, 1);
                 while(!yahooSf.format(date).equals(yahooSf.format(cl.getTime()))){
                     Map<String, Double> historyRate = Utility.getHistoryRateFromYahoo(yahooSf.format(cl.getTime()));
@@ -278,7 +233,7 @@ public class UpdateData {
                                     lostRate.setDate(cl.getTime());
                                     rateService.create(lostRate);
                                 }else {
-                                    System.out.println(currencyCodeStr);
+                                    System.out.println(currencyCodeStr+ "doesn't include");
                                 }
                             }
                         }
@@ -291,7 +246,6 @@ public class UpdateData {
 
             for (Rate rate : latestRates) {
                 String currencyCodeStr = rate.getCurrency().getCode();
-
                 if (!currencyCodeStr.equals("USD")) {
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
                     if(todayRate.containsKey("USD/" + currencyCodeStr)){
@@ -299,7 +253,7 @@ public class UpdateData {
                         Rate currentRate = new Rate();
                         currentRate.setCurrency(currency);
                         currentRate.setValue(rateValue);
-                        currentRate.setDate(new Date());
+                        currentRate.setDate(new Date(Utility.getZeroTime(new Date())));
                         rateService.create(currentRate);
                     }else {
                         System.out.println(currencyCodeStr);

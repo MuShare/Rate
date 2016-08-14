@@ -68,10 +68,10 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
 
 
     @Override
-    public List<Rate> getSpecificRateList(Date startDate, Date endDate, Currency currency) {
+    public List<Rate> getSpecificRateList(long startDate, long endDate, Currency currency) {
         Criteria crit = getCurrentSesstion().createCriteria(Rate.class)
                 .add(Restrictions.eq("currency", currency))
-                .add(Restrictions.between("date", startDate, endDate))
+                .add(Restrictions.between("date", new Date(startDate), new Date(endDate)))
                 .addOrder(Order.asc("date"));
         return crit.list();
     }
