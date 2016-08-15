@@ -31,7 +31,6 @@ import java.util.*;
 
 
 @Controller
-@RemoteProxy
 @RequestMapping("/user")
 public class UserController {
 
@@ -119,7 +118,12 @@ public class UserController {
                 response.put(ResponseField.error_code, 302);
                 response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }else {
+            }else if(token.equals("mail error")){
+                response.put(ResponseField.error_message, "mail need to be validated");
+                response.put(ResponseField.error_code, 304);
+                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }else{
                 Map<String, Object> result = new HashMap<>();
                 User user = deviceService.findUserByToken(token);
                 result.put("token", token);
@@ -390,13 +394,67 @@ public class UserController {
                                                            HttpServletRequest request){
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         if(user != null){
             String pathRoot = request.getSession().getServletContext().getRealPath("");
             if(!file.isEmpty()){
-                userService.uploadImage(user, pathRoot, file);
+                String path = userService.uploadImage(user, pathRoot, file);
+                if(path.equals("size error")){
+                    response.put(ResponseField.error_message, path);
+                    response.put(ResponseField.error_code, 344);
+                    response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }else {
+                    result.put("status", "uploaded success");
+                    response.put(ResponseField.result, result);
+                    response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }
+            }else {
+                response.put(ResponseField.error_message, "file is empty");
+                response.put(ResponseField.error_code, 345);
+                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
-        return null;
+    }
+
+    @RequestMapping(value = "/avatar", method = RequestMethod.GET)
+    public ResponseEntity<Map<String, Object>> getAvatar(@RequestParam(name = "rev", required = true)Integer rev ,
+                                                         HttpServletRequest request){
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        String token = request.getHeader("token");
+        User user = deviceService.findUserByToken(token);
+        if(user != null){
+            if(rev.equals(user.getAvatarRevision())){
+                result.put("isUpdated", "false");
+            }
+            else {
+                result.put("isUpdated", "true");
+                try{
+                    byte[] image = userService.getAvatar(user, request.getServletContext());
+                    result.put("image", image);
+                    result.put("rev", user.getAvatarRevision());
+                }catch (Exception ex){
+                    System.out.println(ex.toString());
+                }
+            }
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/verification_code", method = RequestMethod.GET)
@@ -478,4 +536,6 @@ public class UserController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
+
+
 }

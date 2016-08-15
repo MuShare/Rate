@@ -75,7 +75,18 @@ public class User implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date codeExpiration;
 
-    public String getVerificationCode() {
+	@Column(name = "avatar_revision")
+	private Integer avatarRevision = 0;
+
+	public Integer getAvatarRevision() {
+		return avatarRevision;
+	}
+
+	public void setAvatarRevision(Integer avatarRevision) {
+		this.avatarRevision = avatarRevision;
+	}
+
+	public String getVerificationCode() {
         return verificationCode;
     }
 

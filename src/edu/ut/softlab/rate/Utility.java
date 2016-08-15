@@ -291,7 +291,10 @@ public class Utility {
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
             int width = bufferedImage.getWidth();
             int height = bufferedImage.getHeight();
-            BufferedImage resized = null;
+            if(width < 200 || height < 200){
+                return "size error";
+            }
+            BufferedImage resized;
             if(width > height){
                 resized = bufferedImage.getSubimage(0,0,height, height);
             }else {
@@ -304,10 +307,10 @@ public class Utility {
             String uuid = UUID.randomUUID().toString();
             String contentType=image.getContentType();
             String imageName=contentType.substring(contentType.indexOf("/")+1);
-            path = path + "/static/avatar/"+uuid;
+            path = path + "/Files/avatar/"+uuid+"."+imageName;
             File file = new File(path);
             ImageIO.write(thumbnail,imageName, file);
-            path = "/static/avatar/"+uuid+"."+imageName;
+            path = "/Files/avatar/"+uuid+"."+imageName;
         }catch (Exception ex){
             System.out.println(ex.toString());
         }

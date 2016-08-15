@@ -38,7 +38,6 @@ public class RateService extends AbstractService<Rate> implements IRateService {
 
 
     @Override
-    @RemoteMethod
     public ChartData getHistoryRate(long start, long end, String inCurrencyId, String outCurrencyId) {
         ChartData chartData = new ChartData();
         Currency inCurrency = currencyDao.findOne(inCurrencyId);
@@ -73,7 +72,6 @@ public class RateService extends AbstractService<Rate> implements IRateService {
 
 
     @Override
-    @RemoteMethod
     public double getCurrentRate(String fromCurrencyCid, String toCurrencyCid) {
         Currency toCurrency = currencyDao.findOne(fromCurrencyCid);
         Currency fromCurrency = currencyDao.findOne(toCurrencyCid);
@@ -89,26 +87,6 @@ public class RateService extends AbstractService<Rate> implements IRateService {
             }
         }
         return 0;
-    }
-
-    @Override
-    @RemoteMethod
-    public ChartData getSpecificRate(String start, String end, String currencyCid) {
-        Currency currency = currencyDao.findOne(currencyCid);
-        return rateDao.getSpecificRate(start, end,currency);
-    }
-
-    @Override
-    public ChartData getSpecificRate(long start, long end, Currency currency){
-        ChartData chartData = new ChartData();
-        List<Rate> rateList = rateDao.getSpecificRateList(start, end, currency);
-        List<Double> rateValues = new ArrayList<>();
-        for(Rate rate : rateList){
-            rateValues.add(rate.getValue());
-        }
-        chartData.setData(rateValues);
-        chartData.setTime(start);
-        return chartData;
     }
 
     @Override
