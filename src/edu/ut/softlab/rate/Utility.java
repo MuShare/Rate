@@ -319,6 +319,7 @@ public class Utility {
 
     public static long getZeroTime(Date date){
         Calendar cl = Calendar.getInstance();
+        cl.setTimeZone(TimeZone.getTimeZone("UTC"));
         cl.setTime(date);
         cl.set(Calendar.HOUR_OF_DAY, 0);
         cl.set(Calendar.MINUTE, 0);

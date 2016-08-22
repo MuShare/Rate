@@ -11,6 +11,7 @@ import edu.ut.softlab.rate.service.IRateService;
 import edu.ut.softlab.rate.service.imp.RateService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,18 +54,14 @@ public class UpdateData {
     private ServerConfig serverConfig;
 
 
-
-
     public void createCurrency(String code) {
-            Currency currency = new Currency();
-            currency.setCode(code);
-            if(currencyDao.queryList("code", code.toString()).size() == 0){
-                dao.create(currency);
-                System.out.println(code+" created");
-            }
+        Currency currency = new Currency();
+        currency.setCode(code);
+        if (currencyDao.queryList("code", code.toString()).size() == 0) {
+            dao.create(currency);
+            System.out.println(code + " created");
+        }
     }
-
-
 
 
     @Transactional
@@ -75,15 +72,15 @@ public class UpdateData {
         if (currencyDao.queryList("code", code).size() == 0) {
             newCurrency.setRevision(currencyDao.getCurrentRev() + 1);
             dao.create(newCurrency);
-            System.out.println(code + " created "+newCurrency.getCid());
+            System.out.println(code + " created " + newCurrency.getCid());
 
 
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-            Date latestUpdate;
             Calendar cl = Calendar.getInstance();
+            cl.setTimeZone(TimeZone.getTimeZone("UTC"));
             cl.set(2013, Calendar.JANUARY, 1);
             cl.setTimeInMillis(Utility.getZeroTime(cl.getTime()));
-            latestUpdate = cl.getTime();
+            Date latestUpdate = cl.getTime();
             if (currencyDao.queryList("code", code).size() > 0) {
                 if (!code.equals("USD")) {
                     ArrayList<String> result = Utility.postData(latestUpdate, code);
@@ -91,7 +88,7 @@ public class UpdateData {
                         System.out.println(result.size());
                         Currency currency = dao.queryList("code", code).get(0);
                         double preRate = 0;
-                        Date preDate = latestUpdate;
+                        long preDate = latestUpdate.getTime();
 
                         for (int i = 2; i < result.size() - 1; i++) {
                             Rate rate = new Rate();
@@ -100,20 +97,20 @@ public class UpdateData {
 
                             try {
                                 Date date = new SimpleDateFormat("yyyy/MM/dd").parse(data[1]);
-                                long days = (date.getTime() - preDate.getTime()) / (24 * 60 * 60 * 1000);
+                                long days = (date.getTime() - preDate) / (24 * 60 * 60 * 1000);
                                 if (days > 1) {
                                     for (int j = 0; j < days - 1; j++) {
                                         //插入空缺的
                                         Rate voidRate = new Rate();
                                         voidRate.setCurrency(currency);
                                         voidRate.setValue(preRate);
-                                        cl.setTimeInMillis(preDate.getTime());
+                                        cl.setTimeInMillis(preDate);
                                         cl.add(Calendar.DATE, j + 1);
-                                        voidRate.setDate(cl.getTime());
+                                        voidRate.setDate(cl.getTimeInMillis());
                                         rateDao.create(voidRate);
                                     }
                                 }
-                                rate.setDate(date);
+                                rate.setDate(date.getTime());
                                 rate.setValue(Double.parseDouble(data[3]));
                                 rateDao.create(rate);
                                 preDate = rate.getDate();
@@ -126,7 +123,7 @@ public class UpdateData {
 
 
                         SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");
-                        cl.setTime(preDate);
+                        cl.setTimeInMillis(preDate);
                         System.out.println(cl.get(Calendar.DATE));
                         Calendar current = Calendar.getInstance();
 
@@ -141,18 +138,20 @@ public class UpdateData {
                                         Rate lostRate = new Rate();
                                         lostRate.setCurrency(currency);
                                         lostRate.setValue(rateValue);
-                                        lostRate.setDate(cl.getTime());
+                                        lostRate.setDate(cl.getTimeInMillis());
                                         rateService.create(lostRate);
                                     } else {
-                                        System.out.println(currencyCodeStr+" doesn't include");
-                                        resultMessage = currencyCodeStr+" doesn't include";
+                                        currencyDao.delete(newCurrency);
+                                        System.out.println(currencyCodeStr + " doesn't include");
+                                        resultMessage = currencyCodeStr + " doesn't include will be deleted";
+                                        return resultMessage;
                                     }
-                                }else {
+                                } else {
                                     Map<String, Double> todayRate = Utility.getRateData();
                                     double rateValue = todayRate.get("USD/" + currency.getCode());
                                     Rate lostRate = new Rate();
                                     lostRate.setValue(rateValue);
-                                    lostRate.setDate(cl.getTime());
+                                    lostRate.setDate(cl.getTimeInMillis());
                                     lostRate.setCurrency(currency);
                                     rateService.create(lostRate);
                                     System.out.println(lostRate.getDate());
@@ -190,20 +189,21 @@ public class UpdateData {
     @Scheduled(cron = "30 * * * * ? ") //30秒的时候更新
     @Transactional
     public void updateRate() {
-            updateOrCreateCurrentRate(rateService);
+        updateOrCreateCurrentRate(rateService);
     }
 
     /**
      * 通过雅虎api更新或者创建新的Rate记录
+     *
      * @param rateService rateservice
      */
-    public void updateOrCreateCurrentRate(IRateService rateService){
+    public void updateOrCreateCurrentRate(IRateService rateService) {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         Map<String, Double> todayRate = Utility.getRateData();
         List<Rate> latestRates = rateService.getLatestRates();
         Date date = new Date();
         long currentMilliSeconds = Utility.getZeroTime(date);
-        long lastMilliSeconds = latestRates.get(0).getDate().getTime();
+        long lastMilliSeconds = latestRates.get(0).getDate();
         if (currentMilliSeconds == lastMilliSeconds) {
             System.out.println("yahoo update");
             for (Rate rate : latestRates) {
@@ -213,27 +213,28 @@ public class UpdateData {
         } else {
             SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");
             Calendar cl = Calendar.getInstance();
+            cl.setTimeZone(TimeZone.getTimeZone("UTC"));
             cl.setTimeInMillis(lastMilliSeconds);
 
-            if((date.getTime() - cl.getTimeInMillis()) / (24 * 60 * 60 * 1000) > 1){
+            if ((date.getTime() - cl.getTimeInMillis()) / (24 * 60 * 60 * 1000) > 1) {
                 cl.add(Calendar.DATE, 1);
-                while(!yahooSf.format(date).equals(yahooSf.format(cl.getTime()))){
+                while (!yahooSf.format(date).equals(yahooSf.format(cl.getTime()))) {
                     Map<String, Double> historyRate = Utility.getHistoryRateFromYahoo(yahooSf.format(cl.getTime()));
-                    if(historyRate != null){
+                    if (historyRate != null) {
                         for (Rate rate : latestRates) {
                             String currencyCodeStr = rate.getCurrency().getCode();
                             if (!currencyCodeStr.equals("USD")) {
                                 Currency currency = dao.queryList("code", currencyCodeStr).get(0);
-                                System.out.println(currencyCodeStr+"=X");
-                                if(historyRate.containsKey(currencyCodeStr+"=X")){
-                                    double rateValue = historyRate.get(currencyCodeStr+"=X");
+                                System.out.println(currencyCodeStr + "=X");
+                                if (historyRate.containsKey(currencyCodeStr + "=X")) {
+                                    double rateValue = historyRate.get(currencyCodeStr + "=X");
                                     Rate lostRate = new Rate();
                                     lostRate.setCurrency(currency);
                                     lostRate.setValue(rateValue);
-                                    lostRate.setDate(cl.getTime());
+                                    lostRate.setDate(cl.getTimeInMillis());
                                     rateService.create(lostRate);
-                                }else {
-                                    System.out.println(currencyCodeStr+ "doesn't include");
+                                } else {
+                                    System.out.println(currencyCodeStr + "doesn't include");
                                 }
                             }
                         }
@@ -248,14 +249,14 @@ public class UpdateData {
                 String currencyCodeStr = rate.getCurrency().getCode();
                 if (!currencyCodeStr.equals("USD")) {
                     Currency currency = dao.queryList("code", currencyCodeStr).get(0);
-                    if(todayRate.containsKey("USD/" + currencyCodeStr)){
+                    if (todayRate.containsKey("USD/" + currencyCodeStr)) {
                         double rateValue = todayRate.get("USD/" + currencyCodeStr);
                         Rate currentRate = new Rate();
                         currentRate.setCurrency(currency);
                         currentRate.setValue(rateValue);
-                        currentRate.setDate(new Date(Utility.getZeroTime(new Date())));
+                        currentRate.setDate(Utility.getZeroTime(new Date()));
                         rateService.create(currentRate);
-                    }else {
+                    } else {
                         System.out.println(currencyCodeStr);
                     }
                 }
@@ -267,83 +268,85 @@ public class UpdateData {
     @Transactional
     public void notifyEmail() {
 
-        String certificate = "classes/aps_development.p12";
 
-        IPush iPush1 = new IPush("test test test", "dfa191b3 be5a8e73 75725771 a6f9fdcc 8ae771b1 bdc9f584 f138e6b2 e87945f2\n", certificate);
-        Thread pushThread1 = new Thread(iPush1);
-        pushThread1.start();
+        try {
 
-        List<User> users = userDao.findAll();
-        for (User user : users) {
-            Set<Subscribe> subscribes = user.getSubscribes();
-            StringBuilder sb = new StringBuilder();
-            sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
+            org.springframework.core.io.Resource resource = new ClassPathResource("aps_development.p12");
+            String certificate = resource.getFile().getPath();
+            List<User> users = userDao.findAll();
+            for (User user : users) {
+                Set<Subscribe> subscribes = user.getSubscribes();
+                StringBuilder sb = new StringBuilder();
+                sb.append("This is a notification for your rate alert. The following subscribes hit the threshold you set before\n");
 
-            for (Subscribe subscribe : subscribes) {
-                if(subscribe.getIsEnable()){
-                    System.out.println("sub");
-                    double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
-                            subscribe.getToCurrency().getCid());
+                for (Subscribe subscribe : subscribes) {
+                    if (subscribe.getIsEnable()) {
+                        double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
+                                subscribe.getToCurrency().getCid());
 
-
-                    if(subscribe.getMax() != 0 && subscribe.getMax() < currentValue){
-                        sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-                                + "the rate now ("+currentValue+") is more than"+subscribe.getMax());
-                        subscribe.setIsEnable(false);
-                        Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                        Thread notificationMailThread = new Thread(notification);
-                        notificationMailThread.start();
-                        for(Device device : user.getDevices()){
-                            String token =device.getDeviceToken();
-                            IPush iPush = new IPush(sb.toString(), token, certificate);
-                            Thread pushThread = new Thread(iPush);
-                            pushThread.start();
-                        }
-                    }else if(subscribe.getMin() != 0 && subscribe.getMin() > currentValue){
-                        sb.append("Subscribe Name: "+subscribe.getSname()+" from currency: "+subscribe.getCurrency().getCode()+" to currency: "+subscribe.getToCurrency().getCode()
-                                + "the rate now ("+currentValue+") is lower than "+subscribe.getMin());
-                        subscribe.setIsEnable(false);
-                        Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                        Thread notificationMailThread = new Thread(notification);
-                        notificationMailThread.start();
-                        for(Device device : user.getDevices()){
-                            String token =device.getDeviceToken();
-                            IPush iPush = new IPush(sb.toString(), token, certificate);
-                            Thread pushThread = new Thread(iPush);
-                            pushThread.start();
+                        if (subscribe.getMax() != 0 && subscribe.getMax() < currentValue) {
+                            sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
+                                    + "the rate now (" + currentValue + ") is more than" + subscribe.getMax());
+                            subscribe.setIsEnable(false);
+                            Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                            Thread notificationMailThread = new Thread(notification);
+                            notificationMailThread.start();
+                            for (Device device : user.getDevices()) {
+                                String token = device.getDeviceToken();
+                                IPush iPush = new IPush(sb.toString(), token, certificate);
+                                Thread pushThread = new Thread(iPush);
+                                pushThread.start();
+                            }
+                        } else if (subscribe.getMin() != 0 && subscribe.getMin() > currentValue) {
+                            sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
+                                    + "the rate now (" + currentValue + ") is lower than " + subscribe.getMin());
+                            subscribe.setIsEnable(false);
+                            Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                            Thread notificationMailThread = new Thread(notification);
+                            notificationMailThread.start();
+                            for (Device device : user.getDevices()) {
+                                String token = device.getDeviceToken();
+                                IPush iPush = new IPush(sb.toString(), token, certificate);
+                                Thread pushThread = new Thread(iPush);
+                                pushThread.start();
+                            }
                         }
                     }
                 }
             }
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
         }
+
     }
 
-    private class Notification implements Runnable{
+    private class Notification implements Runnable {
         private String email;
         private String content;
         private String subject;
 
-        public Notification(String email, String subject, String content){
+        public Notification(String email, String subject, String content) {
             this.email = email;
             this.content = content;
             this.subject = subject;
 
         }
+
         @Override
         public void run() {
             Utility.send(email, subject, content);
         }
     }
 
-    private class IPush implements Runnable{
+    private class IPush implements Runnable {
         private String content;
         private String token;
         private String certificate;
 
-        public IPush(String content, String token, String certificate){
+        public IPush(String content, String token, String certificate) {
             this.content = content;
             this.token = token;
-            this.token = certificate;
+            this.certificate = certificate;
         }
 
         @Override

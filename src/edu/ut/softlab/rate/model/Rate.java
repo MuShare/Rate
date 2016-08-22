@@ -25,8 +25,7 @@ public class Rate implements Serializable {
     private String rid;
 
     @Column(name="date")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    private Long date;
 
     @Column(name="value")
     private Double value;
@@ -43,11 +42,11 @@ public class Rate implements Serializable {
         this.rid = rid;
     }
 
-    public Date getDate() {
+    public Long getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(Long date) {
         this.date = date;
     }
 

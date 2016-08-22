@@ -36,34 +36,16 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
 
     @Override
     public Rate getLatestCurrencyRate(Currency currency) {
+        System.out.println(currency.getCode());
         DetachedCriteria maxDate = DetachedCriteria.forClass(Rate.class)
                 .setProjection(Projections.max("date"));
         Criteria criteria = getCurrentSesstion().createCriteria(Rate.class);
         criteria.add(Restrictions.eq("currency", currency))
                 .add(Property.forName("date").eq(maxDate));
+        System.out.println(criteria.list().size());
         return (Rate)criteria.uniqueResult();
     }
 
-    @Override
-    public ChartData getSpecificRate(String start, String end, Currency currency) {
-        String hql = "from Rate where date >= :start and date <= :endDate and cid = :cid";
-        List<Rate> currencyRateList = getCurrentSesstion().createQuery(hql).setString("start", start)
-                .setString("endDate", end)
-                .setString("cid", currency.getCid())
-                .list();
-        ChartData chartData = new ChartData();
-        try{
-            Date startDate = new SimpleDateFormat("yyyy-MM-dd").parse(start);
-            chartData.setTime(startDate.getTime()+32400000);
-        }catch (Exception ex){
-            System.out.println(ex.toString());
-        }
-        chartData.setInCurrency(currency.getCode());
-        for(int i=0; i<currencyRateList.size(); i++){
-            chartData.getData().add(currencyRateList.get(i).getValue());
-        }
-        return chartData;
-    }
 
 
 
@@ -71,7 +53,7 @@ public class RateDao extends AbstractHibernateDao<Rate> implements IRateDao{
     public List<Rate> getSpecificRateList(long startDate, long endDate, Currency currency) {
         Criteria crit = getCurrentSesstion().createCriteria(Rate.class)
                 .add(Restrictions.eq("currency", currency))
-                .add(Restrictions.between("date", new Date(startDate), new Date(endDate)))
+                .add(Restrictions.between("date", startDate, endDate))
                 .addOrder(Order.asc("date"));
         return crit.list();
     }

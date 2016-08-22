@@ -59,6 +59,6 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        //userService.getAvatar(null);
+        updateData.notifyEmail();
     }
 }
