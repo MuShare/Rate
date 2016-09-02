@@ -46,12 +46,6 @@
         </property>
     </bean>
 
-    <mvc:resources location="static/fonts/" mapping="/fonts/**"/>
-    <mvc:resources location="static/css/" mapping="/css/**"/>
-    <mvc:resources location="static/js/" mapping="/js/**"/>
-    <mvc:resources location="static/img/" mapping="/img/**" />
-    <mvc:resources location="static/avatar/" mapping="/avatar/**" />
-
     <!--<util:properties id="currency_zh_cn" location="static/resource/code.txt" />-->
  <!--val-->
     <!--<beans:bean id="nameOfYourPropsVar" class="org.springframework.beans.factory.config.PropertiesFactoryBean">-->
@@ -71,6 +65,11 @@
 
     <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="code_country">
         <property name="location" value="classpath:rate_code_country_name.properties"/>
+        <property name="fileEncoding" value="UTF-8"/>
+    </bean>
+
+    <bean class="org.springframework.beans.factory.config.PropertiesFactoryBean" id="country_location">
+        <property name="location" value="classpath:rate_country_location.properties"/>
         <property name="fileEncoding" value="UTF-8"/>
     </bean>
 

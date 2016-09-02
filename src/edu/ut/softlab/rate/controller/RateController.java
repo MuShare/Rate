@@ -27,7 +27,7 @@ import java.util.*;
  */
 
 @Controller
-@RequestMapping("/rate")
+@RequestMapping("/web/rate")
 public class RateController {
     @Resource(name="rateService")
     private IRateService rateService;
@@ -148,8 +148,6 @@ public class RateController {
         result.put(ResponseField.HttpStatus, HttpStatus.OK.value());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
-
-
 }
 
 

@@ -12,10 +12,28 @@ public class CurrencyBean {
     private String code;
     private String icon;
     private String name;
+    private double latitude;
+    private double longitude;
 
     public CurrencyBean(Currency currency){
         cid = currency.getCid();
         code = currency.getCode();
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public String getCid() {

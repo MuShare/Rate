@@ -18,7 +18,7 @@ import java.util.*;
  * Created by alex on 16-8-1.
  */
 @Controller
-@RequestMapping("/currencies")
+@RequestMapping("/web/currencies")
 public class CurrencyController {
     @Resource(name = "currencyService")
     private ICurrencyService currencyService;
@@ -26,6 +26,8 @@ public class CurrencyController {
     @Value("#{currency_country}")
     private Properties currencyCountry;
 
+    @Value("#{country_location}")
+    private Properties countryLocation;
 
     @RequestMapping(value="", method = RequestMethod.GET)
     public ResponseEntity<Map<String, Object>> getCurrencies(@RequestParam(value="cid", required = false) String cid,
@@ -46,6 +48,10 @@ public class CurrencyController {
                 System.out.println(currency.getCode());
                 currencyBean.setIcon(currencyCountry.get(currency.getCode()).toString().toLowerCase());
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
+                System.out.println(countryLocation.getProperty(currencyCountry.get(currency.getCode()).toString()));
+                String[] location = countryLocation.getProperty(currencyCountry.get(currency.getCode()).toString()).split(",");
+                currencyBean.setLatitude(Double.parseDouble(location[0]));
+                currencyBean.setLongitude(Double.parseDouble(location[1]));
                 currencies.add(currencyBean);
             }
             result.put("currencies", currencies);
