@@ -1,11 +1,11 @@
-package edu.ut.softlab.rate.controller;
+package edu.ut.softlab.rate.webcontroller;
 
 
 import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.bean.ChartData;
-import edu.ut.softlab.rate.bean.RateResultBean;
-import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
+import edu.ut.softlab.rate.model.Favorite;
+import edu.ut.softlab.rate.model.User;
 import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IDeviceService;
 import edu.ut.softlab.rate.service.IRateService;
@@ -19,16 +19,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by alex on 16-4-17.
  */
 
 @Controller
-@RequestMapping("/rate")
-public class RateController {
+@RequestMapping("/web/rate")
+public class WebRateController {
     @Resource(name="rateService")
     private IRateService rateService;
 
@@ -61,7 +63,7 @@ public class RateController {
                }else {
                    Set<Favorite> favorites = user.getFavorites();
                    String baseCid = fromCid != null ? fromCid : toCid;
-                   edu.ut.softlab.rate.model.Currency baseCurrency = currencyService.findOne(baseCid);
+                   Currency baseCurrency = currencyService.findOne(baseCid);
                    double currentBaseRate = rateService.getCurrentRate(baseCurrency);
 
                    //List<RateResultBean> values = new ArrayList<>();

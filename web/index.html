@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Rate</title>
     <script src="js/jquery-3.1.0.min.js"></script>
     <script src="js/semantic.min.js"></script>
     <script src="js/webglearth.js"></script>
+    <script src="js/vue.js"></script>
     <script src="js/index.js"></script>
     <link rel="stylesheet" type="text/css" href="css/semantic.min.css">
     <link rel="stylesheet" type="text/css" href="css/index.css">
@@ -57,43 +57,45 @@
             Chose The Base Currency
         </div>
         <div class="content">
-            <div class="ui eight cards doubling">
-                <a class="card">
-                    <div class="image">
-                        <img src="image/ca.svg">
-                    </div>
-                    <div class="content">
-                        <div class="header">CAD</div>
-                        <div class="meta"><span>Canadian Dollar</span></div>
-                    </div>
-                </a>
-                <a class="card">
-                    <div class="image">
-                        <img src="image/ca.svg">
-                    </div>
-                    <div class="content">
-                        <div class="header">CAD</div>
-                        <div class="meta"><span>Canadian Dollar</span></div>
-                    </div>
-                </a>
-                <a class="card">
-                    <div class="image">
-                        <img src="image/ca.svg">
-                    </div>
-                    <div class="content">
-                        <div class="header">CAD</div>
-                        <div class="meta"><span>Canadian Dollar</span></div>
-                    </div>
-                </a>
-                <a class="card">
-                    <div class="image">
-                        <img src="image/ca.svg">
-                    </div>
-                    <div class="content">
-                        <div class="header">CAD</div>
-                        <div class="meta"><span>Canadian Dollar</span></div>
-                    </div>
-                </a>
+            <div class="ui eight cards doubling" id="test">
+                <template v-for="currency in currencies">
+                    <a class="card" data-cid={{currency.cid}} v-on:click="fun">
+                        <div class="image">
+                            <img :src="'image/'+currency.icon+'.svg'">
+                        </div>
+                        <div class="content">
+                            <div class="header">{{currency.code}}</div>
+                            <div class="meta"><span>{{currency.name}}</span></div>
+                        </div>
+                    </a>
+                </template>
+                <!--<a class="card">-->
+                    <!--<div class="image">-->
+                        <!--<img src="image/ca.svg">-->
+                    <!--</div>-->
+                    <!--<div class="content">-->
+                        <!--<div class="header">CAD</div>-->
+                        <!--<div class="meta"><span>Canadian Dollar</span></div>-->
+                    <!--</div>-->
+                <!--</a>-->
+                <!--<a class="card">-->
+                    <!--<div class="image">-->
+                        <!--<img src="image/ca.svg">-->
+                    <!--</div>-->
+                    <!--<div class="content">-->
+                        <!--<div class="header">CAD</div>-->
+                        <!--<div class="meta"><span>Canadian Dollar</span></div>-->
+                    <!--</div>-->
+                <!--</a>-->
+                <!--<a class="card">-->
+                    <!--<div class="image">-->
+                        <!--<img src="image/ca.svg">-->
+                    <!--</div>-->
+                    <!--<div class="content">-->
+                        <!--<div class="header">CAD</div>-->
+                        <!--<div class="meta"><span>Canadian Dollar</span></div>-->
+                    <!--</div>-->
+                <!--</a>-->
             </div>
         </div>
     </div>

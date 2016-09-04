@@ -8,9 +8,25 @@ var pop_template = '<div class="marker"> <div class="ui two column divided grid"
     '<img src="image/%IMAGE%.svg"></div></div><div class="column"><h4 class="currency_code">%CODE%</h4>' +
     '<span class="currency_name">%NAME%</span><h4 class="rate_value">%VALUE%</h4></div></div></div></div></div>';
 
-$(document).ready(function () {
 
-    getCurrencies();
+
+
+
+$(document).ready(function () {
+    var vm = new Vue({
+        el : '#test',
+        data : {
+            currencies : ''
+        },
+        methods: {
+            fun: function(event){
+                console.log($(event.currentTarget).data('cid'));
+            }
+        }
+    });
+    getCurrencies(vm);
+
+
 
     $("#switch_currency_bt").click(function(){
         $(".ui.modal").modal("show");
@@ -53,14 +69,18 @@ $(document).ready(function () {
 });
 
 
-function getCurrencies(){
+function getCurrencies(vm){
     $.ajax({
         type:'GET',
         url:'/api/web/currencies',
         dataType:'json',
         success:function(data){
+            vm.currencies = data.result.currencies;
             $.grep(data.result.currencies, function(currency){
                 currencies[currency.cid] = currency;
+            });
+            $('a').click(function(){
+               console.log('hello');
             });
             getRate('ff808181568824b701568825c7680000');
         },
@@ -80,10 +100,8 @@ function getRate(fromCid){
             var earth = new WE.map('earth_div');
             WE.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(earth);
             $.each(data.result.rates, function(cid,rate){
-                console.log(cid);
                 var pop_content = getPopContent(cid, rate);
                 var currency = currencies[cid];
-                console.log(currency);
                 var marker = WE.marker([currency.latitude, currency.longitude]).addTo(earth);
                 marker.bindPopup(pop_content, {maxWidth: 150, closeButton: true}).openPopup();
             });
@@ -94,6 +112,7 @@ function getRate(fromCid){
         }
     })
 }
+
 
 function getPopContent(cid, rate){
     var currency = currencies[cid];

@@ -1,9 +1,10 @@
-package edu.ut.softlab.rate.controller;
+package edu.ut.softlab.rate.webcontroller;
 
 
 import edu.ut.softlab.rate.bean.CurrencyBean;
 import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.ICurrencyService;
+import edu.ut.softlab.rate.webbean.WebCurrencyBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
 import javax.annotation.Resource;
 import java.util.*;
 
@@ -18,20 +20,22 @@ import java.util.*;
  * Created by alex on 16-8-1.
  */
 @Controller
-@RequestMapping("/currencies")
-public class CurrencyController {
+@RequestMapping("/web/currencies")
+public class WebCurrencyController {
     @Resource(name = "currencyService")
     private ICurrencyService currencyService;
 
     @Value("#{currency_country}")
     private Properties currencyCountry;
 
+    @Value("#{country_location}")
+    private Properties countryLocation;
 
     @RequestMapping(value="", method = RequestMethod.GET)
     public ResponseEntity<Map<String, Object>> getCurrencies(@RequestParam(value="cid", required = false) String cid,
                                                             @RequestParam(value="lan", required = false, defaultValue = "en") String lan,
                                                              @RequestParam(value="rev", required = false, defaultValue = "0") Integer rev){
-        List<CurrencyBean> currencies = new ArrayList<>();
+        List<WebCurrencyBean> currencies = new ArrayList<>();
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         if(rev == null){
@@ -42,10 +46,14 @@ public class CurrencyController {
         if (cid == null){
             List<Currency> currencyList = currencyService.getUpdatedCurrencies(rev);
             for(Currency currency : currencyList){
-                CurrencyBean currencyBean = new CurrencyBean(currency);
+                WebCurrencyBean currencyBean = new WebCurrencyBean(currency);
                 System.out.println(currency.getCode());
                 currencyBean.setIcon(currencyCountry.get(currency.getCode()).toString().toLowerCase());
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
+                System.out.println(countryLocation.getProperty(currencyCountry.get(currency.getCode()).toString()));
+                String[] location = countryLocation.getProperty(currencyCountry.get(currency.getCode()).toString()).split(",");
+                currencyBean.setLatitude(Double.parseDouble(location[0]));
+                currencyBean.setLongitude(Double.parseDouble(location[1]));
                 currencies.add(currencyBean);
             }
             result.put("currencies", currencies);
@@ -60,7 +68,7 @@ public class CurrencyController {
                 response.put(ResponseField.error_message, "No requested currency");
                 return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
             }else {
-                CurrencyBean currencyBean = new CurrencyBean(currency);
+                WebCurrencyBean currencyBean = new WebCurrencyBean(currency);
                 currencyBean.setIcon(currencyCountry.get(currency.getCode()).toString().toLowerCase());
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
                 currencies.add(currencyBean);
