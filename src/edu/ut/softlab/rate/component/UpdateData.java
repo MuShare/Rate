@@ -8,27 +8,22 @@ import edu.ut.softlab.rate.dao.IUserDao;
 import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.IRateService;
-import edu.ut.softlab.rate.service.imp.RateService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Created by alex on 16-4-12.
  */
-
 @Component("updateData")
 @Lazy(false)
 public class UpdateData {
