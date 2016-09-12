@@ -7,35 +7,53 @@ var pop_template = '<div class="marker"> <div class="ui two column divided grid"
     '<div class="row"><div class="column"><div class="ui image tiny">' +
     '<img src="image/%IMAGE%.svg"></div></div><div class="column"><h4 class="currency_code">%CODE%</h4>' +
     '<span class="currency_name">%NAME%</span><h4 class="rate_value">%VALUE%</h4><button class="ui button" data-cid=%CID% onclick="getHistory(this)">history</button></div></div></div></div></div>';
-
+var current_cid = 'ff808181568824b701568825c7680000';
+var earth;
+var markers = [];
 
 $(document).ready(function () {
-    var vm = new Vue({
+
+
+    var base_vm = new Vue({
+        el : '#base_currency',
+        data : {
+            base_currency : '',
+        },
+        methods : {
+            switch_currency : function(event){
+                $("#currencies").modal("show");
+            }
+        }
+    });
+
+    var currencies_vm = new Vue({
         el : '#test',
         data : {
             currencies : ''
         },
         methods: {
-            fun: function(event){
-                console.log($(event.currentTarget).data('cid'));
+            select_currency: function(event){
+                var selected_cid = $(event.currentTarget).data('cid');
+                base_vm.base_currency = currencies[selected_cid];
+                getRate(selected_cid);
+                current_cid = selected_cid;
+                $("#currencies").modal("hide");
             }
         }
     });
-    getCurrencies(vm);
 
 
-    $("#switch_currency_bt").click(function(){
-        $(".ui.modal").modal("show");
-    });
+
+
+    getCurrencies(currencies_vm, base_vm);
 });
 
 function getHistory(button){
     var to = $(button).data('cid');
-
     $.ajax({
         type:'GET',
         url:'/api/web/rate/history',
-        data:{from:'ff808181568824b701568824c7680000',
+        data:{from:current_cid,
         to:to,
         start:'1357084800000',
         end:'1443398400000'},
@@ -97,7 +115,6 @@ function getHistory(button){
                 }]
             });
             $("#charts").modal("show");
-
         },
         error:function(xhr, status, error){
             console.log(error);
@@ -107,20 +124,42 @@ function getHistory(button){
 
 }
 
-function getCurrencies(vm){
+function getCurrencies(currencies_vm, base_currency_vm){
     $.ajax({
         type:'GET',
         url:'/api/web/currencies',
         dataType:'json',
         success:function(data){
-            vm.currencies = data.result.currencies;
+            currencies_vm.currencies = data.result.currencies;
             $.grep(data.result.currencies, function(currency){
                 currencies[currency.cid] = currency;
             });
-            $('a').click(function(){
-               console.log('hello');
+            base_currency_vm.base_currency = currencies[current_cid];
+            initRate(current_cid);
+        },
+        error:function(xhr, status, error){
+            console.log(error);
+        }
+    })
+}
+
+function initRate(fromCid){
+    $.ajax({
+        type:'GET',
+        url:'/api/web/rate/current',
+        data:{from:fromCid},
+        dataType:'json',
+        success:function(data){
+            earth = new WE.map('earth_div');
+            WE.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(earth);
+            $.each(data.result.rates, function(cid,rate){
+                var pop_content = getPopContent(cid, rate);
+                var currency = currencies[cid];
+                var marker = WE.marker([currency.latitude, currency.longitude]).addTo(earth);
+                marker.bindPopup(pop_content, {maxWidth: 150, closeButton: true}).openPopup();
+                markers[cid] = marker;
             });
-            getRate('ff808181568824b701568824c7680000');
+            earth.setView([51.505, 0], 2);
         },
         error:function(xhr, status, error){
             console.log(error);
@@ -135,12 +174,17 @@ function getRate(fromCid){
         data:{from:fromCid},
         dataType:'json',
         success:function(data){
-            var earth = new WE.map('earth_div');
-            WE.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(earth);
+            var currentMarker = markers[fromCid];
+            currentMarker.removeFrom(earth);
+            delete markers[fromCid];
             $.each(data.result.rates, function(cid,rate){
+                var marker = markers[cid];
                 var pop_content = getPopContent(cid, rate);
                 var currency = currencies[cid];
-                var marker = WE.marker([currency.latitude, currency.longitude]).addTo(earth);
+                if(marker == null){
+                    marker = WE.marker([currency.latitude, currency.longitude]).addTo(earth);
+                    markers[cid] = marker;
+                }
                 marker.bindPopup(pop_content, {maxWidth: 150, closeButton: true}).openPopup();
             });
             earth.setView([51.505, 0], 2);

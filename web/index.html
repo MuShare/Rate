@@ -27,21 +27,21 @@
 <div class="ui container grid">
     <div class="row">
         <div class="four wide column">
-            <div class="ui two column grid celled">
+            <div class="ui two column grid celled" id="base_currency">
                 <div class="column">
                     <div class="ui image small">
-                        <img src="image/us.svg">
+                        <img :src="'image/'+base_currency.icon+'.svg'">
                     </div>
                 </div>
                 <div class="column">
                     <div>
-                        <span class="ui header">US</span>
+                        <span class="ui header">{{base_currency.code}}</span>
                     </div>
                     <div>
-                        <span class="ui center">US Dollar</span>
+                        <span class="ui center">{{base_currency.name}}</span>
                     </div>
                     <div>
-                        <button class="tiny ui icon button right floated" id="switch_currency_bt"><i class="icon setting"></i> </button>
+                        <button class="tiny ui icon button right floated" v-on:click="switch_currency"><i class="icon setting"></i> </button>
                     </div>
                 </div>
             </div>
@@ -52,16 +52,15 @@
     </div>
 
 
-    <div class="ui modal">
+    <div class="ui modal" id="currencies">
         <div class="header">
             Chose The Base Currency
         </div>
         <div class="content">
             <div class="ui eight cards doubling" id="test">
                 <template v-for="currency in currencies">
-                    <a class="card" data-cid={{currency.cid}} v-on:click="fun">
+                    <a class="card" data-cid={{currency.cid}} v-on:click="select_currency">
                         <div class="image">
-                            3
                             <img :src="'image/'+currency.icon+'.svg'">
                         </div>
                         <div class="content">
