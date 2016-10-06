@@ -10,6 +10,7 @@ var pop_template = '<div class="marker"> <div class="ui two column divided grid"
 var current_cid = 'ff808181568824b701568825c7680000';
 var earth;
 var markers = [];
+var selected_currency;
 
 $(document).ready(function () {
 
@@ -42,21 +43,53 @@ $(document).ready(function () {
         }
     });
 
-
+    $('#interval_select').on('click', '.item', function(){
+        $(this).addClass('active')
+            .siblings('.item')
+            .removeClass('active');
+        drawHistory($(this).data('interval'));
+    });
 
 
     getCurrencies(currencies_vm, base_vm);
 });
 
 function getHistory(button){
-    var to = $(button).data('cid');
+    selected_currency = $(button).data('cid');
+    drawHistory('one month');
+    $("#charts").modal("show");
+}
+
+function drawHistory(interval){
+    interval = typeof interval !== 'undefined' ? interval : 'one month';
+    var date = new Date();
+    var end = date.getTime();
+    var start;
+    switch (interval){
+        case 'one month':
+            date.setMonth(date.getMonth() - 1);
+            start = date.getTime();
+            break;
+        case 'three month':
+            date.setMonth(date.getMonth() - 3);
+            start = date.getTime();
+            break;
+        case 'one year':
+            date.setYear(date.getYear() - 1);
+            start = date.getTime();
+            break;
+        default :
+            date.setMonth(date.getMonth() - 1);
+            start = date.getTime();
+    }
+
     $.ajax({
         type:'GET',
         url:'/api/web/rate/history',
         data:{from:current_cid,
-        to:to,
-        start:'1357084800000',
-        end:'1443398400000'},
+        to:selected_currency,
+        start:start,
+        end:end},
         dataType:'json',
         success:function(data){
             $('#highcharts').highcharts({
@@ -107,21 +140,21 @@ function getHistory(button){
                         threshold: null
                     }
                 },
-
                 series: [{
+
                     type: 'area',
-                    name: 'USD to EUR',
+                    name: data.inCurrency+" to "+data.outCurrency,
+                    pointInterval: 24*3600*1000,
+                    pointStart: data.result.time,
                     data: data.result.data
                 }]
             });
-            $("#charts").modal("show");
+
         },
         error:function(xhr, status, error){
             console.log(error);
         }
     });
-
-
 }
 
 function getCurrencies(currencies_vm, base_currency_vm){

@@ -49,6 +49,14 @@ public class RateService extends AbstractService<Rate> implements IRateService {
         chartData.setInCurrency(inCurrency.getCode());
         chartData.setOutCurrency(outCurrency.getCode());
 
+        if(inCurrencyRateList.size() != 0){
+            chartData.setTime(inCurrencyRateList.get(0).getDate());
+        }else {
+            chartData.setTime(outCurrencyRateList.get(0).getDate());
+        }
+
+        System.out.println(chartData.getTime());
+
 
         if(!inCurrency.getCode().equals("USD") && !outCurrency.getCode().equals("USD")){
             for(int i=0; i<inCurrencyRateList.size(); i++){
