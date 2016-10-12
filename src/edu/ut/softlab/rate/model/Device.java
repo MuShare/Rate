@@ -43,9 +43,20 @@ public class Device implements Serializable{
     @Column(name="os_version")
     private String osVersion;
 
+    @Column(name="notify")
+    private Boolean isNotify = true;
+
     @ManyToOne
     @JoinColumn(name = "uid")
     private User user;
+
+    public Boolean getIsNotify() {
+        return isNotify;
+    }
+
+    public void setIsNotify(Boolean isNotify) {
+        this.isNotify = isNotify;
+    }
 
     public String getDid() {
         return did;

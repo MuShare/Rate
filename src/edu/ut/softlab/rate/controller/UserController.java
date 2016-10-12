@@ -92,10 +92,7 @@ public class UserController {
                                                           @RequestParam(value = "os", required = false) String os,
                                                           @RequestParam(value = "did", required = true)String deviceId,
                                                           HttpServletRequest request){
-
-
         Map<String, Object> response = new HashMap<>();
-
         String ip = request.getHeader("x-forwarded-for");
         if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
@@ -116,11 +113,6 @@ public class UserController {
             }else if(token.equals("account_error")){
                 response.put(ResponseField.error_message, token);
                 response.put(ResponseField.error_code, 302);
-                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }else if(token.equals("mail error")){
-                response.put(ResponseField.error_message, "mail need to be validated");
-                response.put(ResponseField.error_code, 304);
                 response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }else{
@@ -197,7 +189,7 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         if(devices.size() != 0){
             Device device = devices.get(0);
-            device.setLoginToken(null);
+            device.setIsNotify(false);
             deviceService.update(device);
             result.put("status", "log out successfully");
             response.put(ResponseField.result, result);
@@ -228,6 +220,12 @@ public class UserController {
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         if(loggedUser != null){
+            if(!loggedUser.getStatus() && subscribe.getIsSendEmail()){
+                response.put(ResponseField.error_message, "mail need to be validate");
+                response.put(ResponseField.error_code, 330);
+                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
             if(isAbove){
                 subscribe.setMax(0.0);
                 subscribe.setMin(threshold);
@@ -258,6 +256,12 @@ public class UserController {
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
         if(user != null){
+            if(!user.getStatus() && subscribe.getIsSendEmail()){
+                response.put(ResponseField.error_message, "mail need to be validate");
+                response.put(ResponseField.error_code, 330);
+                response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
             if(isAbove){
                 subscribe.setMax(0.0);
                 subscribe.setMin(threshold);
@@ -372,7 +376,10 @@ public class UserController {
     }
 
     @RequestMapping(value = "/add_feedback", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> addFeedback(@RequestBody String feedback, HttpServletRequest request){
+    public ResponseEntity<Map<String, Object>> addFeedback(@RequestParam(value = "type", required = true) Integer type,
+                                                           @RequestParam(value = "content", required = true) String content,
+                                                           @RequestParam(value = "contact", required = true) String contact,
+                                                           HttpServletRequest request){
         String token = request.getHeader("token");
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
@@ -380,9 +387,8 @@ public class UserController {
         if(token != null){
             user = deviceService.findUserByToken(token);
         }
-        JSONObject feedbackObject = new JSONObject(feedback);
-        String fdid = userService.addFeedback(user, feedbackObject.getInt("type"),
-                feedbackObject.getString("content"), feedbackObject.getString("contact"));
+        String fdid = userService.addFeedback(user, type,
+                content, contact);
         result.put("fdid", fdid);
         response.put(ResponseField.result, result);
         response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
@@ -536,6 +542,4 @@ public class UserController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }

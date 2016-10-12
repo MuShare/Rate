@@ -262,10 +262,7 @@ public class UpdateData {
     @Scheduled(cron = "30 * * * * ? ") //每天十二点更新
     @Transactional
     public void notifyEmail() {
-
-
         try {
-
             org.springframework.core.io.Resource resource = new ClassPathResource("aps_development.p12");
             String certificate = resource.getFile().getPath();
             List<User> users = userDao.findAll();
@@ -283,27 +280,35 @@ public class UpdateData {
                             sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
                                     + "the rate now (" + currentValue + ") is more than" + subscribe.getMax());
                             subscribe.setIsEnable(false);
-                            Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                            Thread notificationMailThread = new Thread(notification);
-                            notificationMailThread.start();
+                            if(subscribe.getIsSendEmail()){
+                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                                Thread notificationMailThread = new Thread(notification);
+                                notificationMailThread.start();
+                            }
                             for (Device device : user.getDevices()) {
-                                String token = device.getDeviceToken();
-                                IPush iPush = new IPush(sb.toString(), token, certificate);
-                                Thread pushThread = new Thread(iPush);
-                                pushThread.start();
+                                if(device.getIsNotify()){
+                                    String token = device.getDeviceToken();
+                                    IPush iPush = new IPush(sb.toString(), token, certificate);
+                                    Thread pushThread = new Thread(iPush);
+                                    pushThread.start();
+                                }
                             }
                         } else if (subscribe.getMin() != 0 && subscribe.getMin() > currentValue) {
                             sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
                                     + "the rate now (" + currentValue + ") is lower than " + subscribe.getMin());
                             subscribe.setIsEnable(false);
-                            Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                            Thread notificationMailThread = new Thread(notification);
-                            notificationMailThread.start();
+                            if(subscribe.getIsSendEmail()){
+                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
+                                Thread notificationMailThread = new Thread(notification);
+                                notificationMailThread.start();
+                            }
                             for (Device device : user.getDevices()) {
-                                String token = device.getDeviceToken();
-                                IPush iPush = new IPush(sb.toString(), token, certificate);
-                                Thread pushThread = new Thread(iPush);
-                                pushThread.start();
+                                if(device.getIsNotify()){
+                                    String token = device.getDeviceToken();
+                                    IPush iPush = new IPush(sb.toString(), token, certificate);
+                                    Thread pushThread = new Thread(iPush);
+                                    pushThread.start();
+                                }
                             }
                         }
                     }

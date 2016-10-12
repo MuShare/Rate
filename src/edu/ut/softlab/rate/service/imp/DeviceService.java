@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by alex on 16-8-3.
@@ -46,7 +47,7 @@ public class DeviceService extends AbstractService<Device> implements IDeviceSer
     }
 
     @Override
-    public Device findDeviceByDeviceId(String deviceId) {
+    public List<Device> findDeviceByDeviceId(String deviceId) {
         return deviceDao.findDeviceByDeviceId(deviceId);
     }
 

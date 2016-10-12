@@ -4,11 +4,13 @@ import edu.ut.softlab.rate.dao.common.IOperations;
 import edu.ut.softlab.rate.model.Device;
 import edu.ut.softlab.rate.model.User;
 
+import java.util.List;
+
 /**
  * Created by alex on 16-8-3.
  */
 public interface IDeviceService extends IOperations<Device>{
     User findUserByToken(String token);
     String updateToken(String currentToken, String deviceToken, String ip);
-    Device findDeviceByDeviceId(String deviceId);
+    List<Device> findDeviceByDeviceId(String deviceId);
 }

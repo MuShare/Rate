@@ -282,7 +282,10 @@ public class Utility {
                         .withSandboxDestination()
                         .build();
 
-        String payload = APNS.newPayload().alertBody(content).build();
+        String payload = APNS.newPayload()  .customField("secret", "what do you think?")
+                .localizedKey("GAME_PLAY_REQUEST_FORMAT")
+                .localizedArguments("Jenna", "Frank")
+                .actionKey("Play").build();
         service.push(token, payload);
     }
 

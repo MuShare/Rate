@@ -8,6 +8,8 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Created by alex on 16-8-3.
  */
@@ -44,14 +46,10 @@ public class DeviceDao extends AbstractHibernateDao<Device> implements IDeviceDa
     }
 
     @Override
-    public Device findDeviceByDeviceId(String deviceId) {
+    public List<Device> findDeviceByDeviceId(String deviceId) {
         Criteria criteria = getCurrentSesstion().createCriteria(Device.class)
                 .add(Restrictions.eq("deviceId", deviceId));
-        Device device = (Device)criteria.uniqueResult();
-        if(device == null){
-            return null;
-        }else {
-            return device;
-        }
+        List<Device> result = (List<Device>)criteria.list();
+        return result;
     }
 }
