@@ -4,6 +4,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import edu.ut.softlab.rate.bean.SubscribeSyncBean;
 import edu.ut.softlab.rate.component.ServerConfig;
 import edu.ut.softlab.rate.model.Device;
@@ -140,13 +141,14 @@ public class UserController {
     }
 
     /**
-     * 二次登录
+     * 请求token
      * @param deviceToken 设备token
      * @param request 请求实体
      * @return 新token
      */
     @RequestMapping(value = "/device_token", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> login(@RequestParam(value = "device_token", required = true)String deviceToken,
+                                                     @RequestParam(value = "lan", required = true)String lan,
                                                      HttpServletRequest request){
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> result = new HashMap<>();
@@ -163,7 +165,7 @@ public class UserController {
         }
 
         String currentToken = request.getHeader("token");
-        String newToken = deviceService.updateToken(currentToken, deviceToken, ip);
+        String newToken = deviceService.updateToken(currentToken, deviceToken, ip, lan);
         if(newToken == null){
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
@@ -184,7 +186,6 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request){
         String token = request.getHeader("token");
         List<Device> devices = deviceService.queryList("loginToken", token);
-        System.out.println(token);
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         if(devices.size() != 0){
@@ -192,6 +193,35 @@ public class UserController {
             device.setIsNotify(false);
             deviceService.update(device);
             result.put("status", "log out successfully");
+            response.put(ResponseField.result, result);
+            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else {
+            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * 设置notification
+     * @param enable
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/notification", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> setNotification(@RequestParam(value = "enable", required = true)Boolean enable,
+                                                               HttpServletRequest request){
+        String token = request.getHeader("token");
+        List<Device> devices = deviceService.queryList("loginToken", token);
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        if(devices.size() != 0){
+            Device device = devices.get(0);
+            device.setIsNotify(enable);
+            deviceService.update(device);
+            result.put("status", "set notification successfully");
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);

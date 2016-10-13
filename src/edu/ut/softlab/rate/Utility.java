@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -30,6 +31,7 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import com.notnoop.apns.*;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -37,8 +39,16 @@ import org.springframework.web.multipart.MultipartFile;
  * Created by alex on 16-4-12.
  */
 
-
+@Component
 public class Utility {
+
+
+    private static Properties account_information;
+    @Value("#{account_information}")
+    public void setAccount_information(Properties account_properties){
+        Utility.account_information = account_properties;
+    }
+
 
     public static Utility utility;
     public static Utility getUtility(){
@@ -49,23 +59,24 @@ public class Utility {
     }
 
     //smtp.163.com
-    public static final String HOST = "mushare.cn";
-    public static final String PROTOCOL = "smtp";
-    public static final int PORT = 25;
-    public static final String FROM = "rate";//发件人的email
-    public static final String PWD = "123";//发件人密码
+//    public static final String HOST = account_information.getProperty("HOST");
+//    public static final String PROTOCOL = account_information.getProperty("PROTOCOL");
+//    public static final int PORT = Integer.parseInt(account_information.getProperty("PORT"));
+//    public static final String FROM = account_information.getProperty("FROM");//发件人的email
+//    public static final String PWD = account_information.getProperty("PWD");//发件人密码
+
     private static Session getSession() {
         Properties props = new Properties();
-        props.put("mail.smtp.host", HOST);//设置服务器地址
-        props.put("mail.store.protocol" , PROTOCOL);//设置协议
-        props.put("mail.smtp.port", PORT);//设置端口
+        props.put("mail.smtp.host", account_information.getProperty("HOST"));//设置服务器地址
+        props.put("mail.store.protocol" , account_information.getProperty("PROTOCOL"));//设置协议
+        props.put("mail.smtp.port", Integer.parseInt(account_information.getProperty("PORT")));//设置端口
         props.put("mail.smtp.auth" , true);
 
         Authenticator authenticator = new Authenticator() {
 
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(FROM, PWD);
+                return new PasswordAuthentication(account_information.getProperty("FROM"), account_information.getProperty("PWD"));
             }
         };
         return Session.getDefaultInstance(props , authenticator);
@@ -79,7 +90,7 @@ public class Utility {
             Message msg = new MimeMessage(session);
 
             //Set message attributes
-            msg.setFrom(new InternetAddress(FROM));
+            msg.setFrom(new InternetAddress(account_information.getProperty("FROM")));
             InternetAddress[] address = {new InternetAddress(toEmail)};
             msg.setRecipients(Message.RecipientType.TO, address);
             msg.setSubject(subject);
@@ -274,16 +285,16 @@ public class Utility {
         return (double) tmp / factor;
     }
 
-    public static void iphonePush(String content, String token, String certificate){
+    public static void iphonePush(String content, String token, String certificate, String sid){
         System.out.println(certificate);
         ApnsService service =
                 APNS.newService()
-                        .withCert(certificate, "8eu3d7wn32")
+                        .withCert(certificate, account_information.getProperty("PUSH_PWD"))
                         .withSandboxDestination()
                         .build();
 
-        String payload = APNS.newPayload()  .customField("secret", "what do you think?")
-                .localizedKey("GAME_PLAY_REQUEST_FORMAT")
+        String payload = APNS.newPayload().customField("sid", sid)
+                .localizedKey(content)
                 .localizedArguments("Jenna", "Frank")
                 .actionKey("Play").build();
         service.push(token, payload);

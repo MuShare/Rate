@@ -31,7 +31,7 @@ public class DeviceService extends AbstractService<Device> implements IDeviceSer
     }
 
     @Override
-    public String updateToken(String currentToken, String deviceToken, String ip) {
+    public String updateToken(String currentToken, String deviceToken, String ip, String lan) {
         Device device = deviceDao.findDeviceByToken(currentToken);
         if(device == null){
             return null;
@@ -41,6 +41,7 @@ public class DeviceService extends AbstractService<Device> implements IDeviceSer
             String token = Utility.getToken(currentToken);
             device.setLoginToken(token);
             device.setLastLoginIp(ip);
+            device.setLan(lan);
             deviceDao.update(device);
             return token;
         }

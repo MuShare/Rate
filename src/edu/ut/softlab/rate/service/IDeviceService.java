@@ -11,6 +11,6 @@ import java.util.List;
  */
 public interface IDeviceService extends IOperations<Device>{
     User findUserByToken(String token);
-    String updateToken(String currentToken, String deviceToken, String ip);
+    String updateToken(String currentToken, String deviceToken, String ip, String lan);
     List<Device> findDeviceByDeviceId(String deviceId);
 }

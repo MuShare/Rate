@@ -9,6 +9,7 @@ import edu.ut.softlab.rate.model.*;
 import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.IRateService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -45,8 +46,12 @@ public class UpdateData {
     @Resource(name = "currencyDao")
     private ICurrencyDao currencyDao;
 
-    @Resource(name = "serverConfig")
-    private ServerConfig serverConfig;
+    @Resource(name = "messageSource")
+    private MessageSource messageSource;
+
+
+    @Value("#{account_information}")
+    private Properties account_information;
 
 
     public void createCurrency(String code) {
@@ -57,7 +62,6 @@ public class UpdateData {
             System.out.println(code + " created");
         }
     }
-
 
     @Transactional
     public String addCurrencyAndRate(String code) {
@@ -263,7 +267,7 @@ public class UpdateData {
     @Transactional
     public void notifyEmail() {
         try {
-            org.springframework.core.io.Resource resource = new ClassPathResource("aps_development.p12");
+            org.springframework.core.io.Resource resource = new ClassPathResource(account_information.getProperty("PUSH_CA"));
             String certificate = resource.getFile().getPath();
             List<User> users = userDao.findAll();
             for (User user : users) {
@@ -273,42 +277,95 @@ public class UpdateData {
 
                 for (Subscribe subscribe : subscribes) {
                     if (subscribe.getIsEnable()) {
+                        String lan = null;
                         double currentValue = rateService.getCurrentRate(subscribe.getCurrency().getCid(),
                                 subscribe.getToCurrency().getCid());
 
                         if (subscribe.getMax() != 0 && subscribe.getMax() < currentValue) {
                             sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
                                     + "the rate now (" + currentValue + ") is more than" + subscribe.getMax());
+                            Object[] messageParams = {currentValue, subscribe.getMax()};
                             subscribe.setIsEnable(false);
-                            if(subscribe.getIsSendEmail()){
-                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                                Thread notificationMailThread = new Thread(notification);
-                                notificationMailThread.start();
-                            }
                             for (Device device : user.getDevices()) {
+                                String deviceLan = device.getLan();
                                 if(device.getIsNotify()){
+                                    String notifyContent;
+                                    if(deviceLan.toLowerCase().contains("zh")){
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.CHINA);
+                                        lan = "zh";
+                                    }else if(deviceLan.toLowerCase().contains("ja")){
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.JAPAN);
+                                        lan = "ja";
+                                    }else {
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.US);
+                                        lan = "en";
+                                    }
                                     String token = device.getDeviceToken();
-                                    IPush iPush = new IPush(sb.toString(), token, certificate);
+                                    IPush iPush = new IPush(notifyContent, token, certificate, subscribe.getSid());
                                     Thread pushThread = new Thread(iPush);
                                     pushThread.start();
                                 }
+                            }
+                            if(subscribe.getIsSendEmail()){
+                                Object[] emailMessageParams = {subscribe.getSname()};
+                                String emailContent = null;
+                                if(lan != null){
+                                    if(lan.equals("zh")){
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.CHINA);
+                                    }else if(lan.equals("ja")){
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.JAPAN);
+                                    }else {
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.US);
+                                    }
+                                }else {
+                                    emailContent = messageSource.getMessage("email", emailMessageParams, Locale.US);
+                                }
+                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", emailContent );
+                                Thread notificationMailThread = new Thread(notification);
+                                notificationMailThread.start();
                             }
                         } else if (subscribe.getMin() != 0 && subscribe.getMin() > currentValue) {
                             sb.append("Subscribe Name: " + subscribe.getSname() + " from currency: " + subscribe.getCurrency().getCode() + " to currency: " + subscribe.getToCurrency().getCode()
                                     + "the rate now (" + currentValue + ") is lower than " + subscribe.getMin());
                             subscribe.setIsEnable(false);
-                            if(subscribe.getIsSendEmail()){
-                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", sb.toString());
-                                Thread notificationMailThread = new Thread(notification);
-                                notificationMailThread.start();
-                            }
+                            Object[] messageParams = {currentValue, subscribe.getMin()};
                             for (Device device : user.getDevices()) {
+                                String deviceLan = device.getLan();
                                 if(device.getIsNotify()){
+                                    String notifyContent;
+                                    if(deviceLan.toLowerCase().contains("zh")){
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.CHINA);
+                                        lan = "zh";
+                                    }else if(deviceLan.toLowerCase().contains("ja")){
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.JAPAN);
+                                        lan = "ja";
+                                    }else {
+                                        notifyContent = messageSource.getMessage("alert", messageParams, Locale.US);
+                                        lan = "en";
+                                    }
                                     String token = device.getDeviceToken();
-                                    IPush iPush = new IPush(sb.toString(), token, certificate);
+                                    IPush iPush = new IPush(notifyContent, token, certificate, subscribe.getSid());
                                     Thread pushThread = new Thread(iPush);
                                     pushThread.start();
                                 }
+                            }
+                            if(subscribe.getIsSendEmail()){
+                                Object[] emailMessageParams = {subscribe.getSname()};
+                                String emailContent = null;
+                                if(lan != null){
+                                    if(lan.equals("zh")){
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.CHINA);
+                                    }else if(lan.equals("ja")){
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.JAPAN);
+                                    }else {
+                                        emailContent = messageSource.getMessage("email", emailMessageParams, Locale.US);
+                                    }
+                                }else {
+                                    emailContent = messageSource.getMessage("email", emailMessageParams, Locale.US);
+                                }
+                                Notification notification = new Notification(subscribe.getUser().getEmail(), "Rate Alert", emailContent);
+                                Thread notificationMailThread = new Thread(notification);
+                                notificationMailThread.start();
                             }
                         }
                     }
@@ -342,16 +399,18 @@ public class UpdateData {
         private String content;
         private String token;
         private String certificate;
+        private String sid;
 
-        public IPush(String content, String token, String certificate) {
+        public IPush(String content, String token, String certificate, String sid) {
             this.content = content;
             this.token = token;
             this.certificate = certificate;
+            this.sid = sid;
         }
 
         @Override
         public void run() {
-            Utility.iphonePush(content, token, certificate);
+            Utility.iphonePush(content, token, certificate, sid);
         }
     }
 }

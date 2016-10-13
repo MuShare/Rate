@@ -147,6 +147,7 @@ public class WebUserController {
      */
     @RequestMapping(value = "/device_token", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> login(@RequestParam(value = "device_token", required = true)String deviceToken,
+                                                     @RequestParam(value = "lan", required = true)String lan,
                                                      HttpServletRequest request){
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> result = new HashMap<>();
@@ -163,7 +164,7 @@ public class WebUserController {
         }
 
         String currentToken = request.getHeader("token");
-        String newToken = deviceService.updateToken(currentToken, deviceToken, ip);
+        String newToken = deviceService.updateToken(currentToken, deviceToken, ip, lan);
         if(newToken == null){
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());

@@ -46,9 +46,20 @@ public class Device implements Serializable{
     @Column(name="notify")
     private Boolean isNotify = true;
 
+    @Column(name = "lan")
+    private String lan = "en";
+
     @ManyToOne
     @JoinColumn(name = "uid")
     private User user;
+
+    public String getLan() {
+        return lan;
+    }
+
+    public void setLan(String lan) {
+        this.lan = lan;
+    }
 
     public Boolean getIsNotify() {
         return isNotify;

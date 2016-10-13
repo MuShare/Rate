@@ -122,21 +122,25 @@ public class UserService extends AbstractService<User> implements IUserService {
         } else if (users.get(0).getPassword().equals(password)) {
             //强制删除登录的情况
             List<Device> devices = deviceService.findDeviceByDeviceId(deviceId);
-            if (!users.get(0).getStatus()) {
-                return "mail error";
-            } else {
-                for (Device device : devices) {
-                    if (device.getUser().getUid().equals(users.get(0).getUid())) {
-                        device.setLastLoginTime(new Date());
-                        device.setLastLoginIp(ip);
-                        device.setIsNotify(true);
-                        device.setOsVersion(os);
-                        String token = Utility.getToken(device.getLoginToken());
-                        device.setLoginToken(token);
-                        device.setDeviceToken(deviceToken);
-                        return token;
-                    }
+
+            Device currentUserDevice = null;
+            for (Device device : devices) {
+                if (device.getUser().getUid().equals(users.get(0).getUid())) {
+                    currentUserDevice = device;
+                    break;
                 }
+            }
+            if(currentUserDevice != null){
+                currentUserDevice.setLastLoginTime(new Date());
+                currentUserDevice.setLastLoginIp(ip);
+                currentUserDevice.setIsNotify(true);
+                currentUserDevice.setOsVersion(os);
+                String token = Utility.getToken(currentUserDevice.getLoginToken());
+                currentUserDevice.setLoginToken(token);
+                currentUserDevice.setDeviceToken(deviceToken);
+                deviceService.update(currentUserDevice);
+                return token;
+            }else {
                 Device device = new Device();
                 device.setDeviceToken(deviceToken);
                 device.setLastLoginTime(new Date());

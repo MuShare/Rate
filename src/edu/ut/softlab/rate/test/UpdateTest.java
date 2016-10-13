@@ -15,10 +15,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
 import java.util.*;
 
 
@@ -54,11 +57,16 @@ public class UpdateTest {
     @Value("#{supplement}")
     private Properties supplement;
 
+    @Resource(name = "messageSource")
+    private MessageSource ms;
+
 
     @Test
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        updateData.notifyEmail();
+        Object[] params = {"John", new GregorianCalendar().getTime()};
+        String str1 = ms.getMessage("greeting.common", params, Locale.JAPAN);
+        System.out.println(str1);
     }
 }
