@@ -6,3 +6,4 @@
 *.iws
 src/rate_account.properties
 src/aps_development.p12
+src/persistence-mysql.properties
