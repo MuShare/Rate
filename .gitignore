@@ -4,5 +4,5 @@
 .idea/
 *.iml
 *.iws
-rate_account.properties
-*.p12
+src/rate_account.properties
+src/aps_development.p12
