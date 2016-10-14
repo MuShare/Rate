@@ -92,6 +92,7 @@ public class UserController {
                                                           @RequestParam(value = "device_token", required = true) String deviceToken,
                                                           @RequestParam(value = "os", required = false) String os,
                                                           @RequestParam(value = "did", required = true)String deviceId,
+                                                          @RequestParam(value = "lan", required = true)String lan,
                                                           HttpServletRequest request){
         Map<String, Object> response = new HashMap<>();
         String ip = request.getHeader("x-forwarded-for");
@@ -105,6 +106,7 @@ public class UserController {
             ip = request.getRemoteAddr();
         }
         String token = userService.mobileLogin(email, password, deviceToken, os, ip, deviceId);
+        List<Device> currentDevice = deviceService.queryList("loginToken", token);
         if(token != null){
             if(token.equals("pass_error")){
                 response.put(ResponseField.error_message, token);
@@ -119,6 +121,13 @@ public class UserController {
             }else{
                 Map<String, Object> result = new HashMap<>();
                 User user = deviceService.findUserByToken(token);
+                if(currentDevice.size() > 0){
+                    result.put("notification", currentDevice.get(0).getIsNotify());
+                    currentDevice.get(0).setLan(lan);
+                    deviceService.update(currentDevice.get(0));
+                }else {
+                    result.put("notification", true);
+                }
                 result.put("token", token);
                 result.put("uname", user.getUname());
                 result.put("telephone", user.getTelephone());

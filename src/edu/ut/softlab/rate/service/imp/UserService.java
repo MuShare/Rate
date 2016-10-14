@@ -145,6 +145,7 @@ public class UserService extends AbstractService<User> implements IUserService {
                 device.setDeviceToken(deviceToken);
                 device.setLastLoginTime(new Date());
                 String token = Utility.getToken(email);
+                device.setIsNotify(true);
                 device.setLoginToken(token);
                 device.setLastLoginIp(ip);
                 device.setUser(users.get(0));

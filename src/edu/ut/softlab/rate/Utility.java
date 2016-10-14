@@ -58,7 +58,6 @@ public class Utility {
         return utility;
     }
 
-    //smtp.163.com
 //    public static final String HOST = account_information.getProperty("HOST");
 //    public static final String PROTOCOL = account_information.getProperty("PROTOCOL");
 //    public static final int PORT = Integer.parseInt(account_information.getProperty("PORT"));
@@ -96,7 +95,6 @@ public class Utility {
             msg.setSubject(subject);
             msg.setSentDate(new Date());
             msg.setContent(content , "text/html;charset=utf-8");
-
             //Send the message
             Transport.send(msg);
         }
@@ -294,9 +292,10 @@ public class Utility {
                         .build();
 
         String payload = APNS.newPayload().customField("sid", sid)
+                .sound("default")
                 .localizedKey(content)
-                .localizedArguments("Jenna", "Frank")
-                .actionKey("Play").build();
+                .alertTitle("subscription alert")
+                .build();
         service.push(token, payload);
     }
 

@@ -2,6 +2,7 @@ package edu.ut.softlab.rate.test;
 
 
 
+import edu.ut.softlab.rate.Utility;
 import edu.ut.softlab.rate.bean.ChartData;
 import edu.ut.softlab.rate.component.UpdateData;
 import edu.ut.softlab.rate.controller.RateController;
@@ -65,8 +66,6 @@ public class UpdateTest {
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        Object[] params = {"John", new GregorianCalendar().getTime()};
-        String str1 = ms.getMessage("greeting.common", params, Locale.JAPAN);
-        System.out.println(str1);
+        Utility.send("alexlai@softlab.cs.tsukuba.ac.jp", "hello", "test email");
     }
 }
