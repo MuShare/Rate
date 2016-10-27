@@ -100,7 +100,7 @@ public class UserService extends AbstractService<User> implements IUserService {
             user.setValidateCode(Utility.getToken(user.getEmail()));
             this.userDao.create(user);
             StringBuilder sb = new StringBuilder();
-            sb.append("please click the following url to validate your email address,please click \n");
+            sb.append("please click the following link to validate your email address,please click \n");
             sb.append("href=\"http://rate.mushare.cn/api/user/activate?validateCode=");
             sb.append(user.getValidateCode());
             sb.append("&uid=");

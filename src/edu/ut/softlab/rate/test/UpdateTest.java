@@ -12,11 +12,14 @@ import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IRateService;
 import edu.ut.softlab.rate.service.IUserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -54,6 +57,9 @@ public class UpdateTest {
     @Autowired
     IUserService userService;
 
+    @Value("#{account_information}")
+    private Properties account_information;
+
 
     @Value("#{supplement}")
     private Properties supplement;
@@ -62,10 +68,21 @@ public class UpdateTest {
     private MessageSource ms;
 
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(UpdateTest.class);
+
+
+
+
     @Test
     @Rollback(false)
     @Transactional
     public void rateTest(){
-        Utility.send("alexlai@softlab.cs.tsukuba.ac.jp", "hello", "test email");
+        try{
+            org.springframework.core.io.Resource resource = new ClassPathResource(account_information.getProperty("PUSH_CA"));
+            String certificate = resource.getFile().getPath();
+        }catch (Exception ex){
+            System.out.println("error:"+ex.toString());
+        }
     }
 }

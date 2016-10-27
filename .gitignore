@@ -7,3 +7,4 @@
 src/rate_account.properties
 src/aps.p12
 src/persistence-mysql.properties
+src/log4j.properties

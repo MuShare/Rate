@@ -206,8 +206,21 @@ public class UpdateData {
         if (currentMilliSeconds == lastMilliSeconds) {
             System.out.println("yahoo update");
             for (Rate rate : latestRates) {
-                rate.setValue(todayRate.get("USD/" + rate.getCurrency().getCode()));
-                rateDao.update(rate);
+                if(todayRate.get("USD/" + rate.getCurrency().getCode()) != null){
+                    rate.setValue(todayRate.get("USD/" + rate.getCurrency().getCode()));
+                    rateDao.update(rate);
+                }else {
+                    try{
+                        File supplement = new File("src/rate_null_rate.properties");
+                        FileWriter fileWriter = new FileWriter(supplement, true);
+                        BufferedWriter writer = new BufferedWriter(fileWriter);
+                        writer.write(rate.getCurrency().getCode()+ " null" + "\n");
+                        writer.flush();
+                        writer.close();
+                    }catch (Exception ex){
+                        System.out.println(ex.toString());
+                    }
+                }
             }
         } else {
             SimpleDateFormat yahooSf = new SimpleDateFormat("yyyyMMdd");

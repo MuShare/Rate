@@ -9,6 +9,8 @@ import edu.ut.softlab.rate.model.Currency;
 import edu.ut.softlab.rate.service.ICurrencyService;
 import edu.ut.softlab.rate.service.IDeviceService;
 import edu.ut.softlab.rate.service.IRateService;
+import org.apache.log4j.spi.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -38,6 +40,9 @@ public class RateController {
     @Resource(name = "deviceService")
     private IDeviceService deviceService;
 
+    private static final Logger logger =
+            org.slf4j.LoggerFactory.getLogger(RateController.class);
+
     @Transactional
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public ResponseEntity<Map<String, Object>> getHistoryRate(@RequestParam(value = "from", required = false) String fromCid,
@@ -45,6 +50,7 @@ public class RateController {
                                                               @RequestParam(value = "favorite", required = false, defaultValue = "false") Boolean fav,
                                                               HttpServletRequest request
                                                               ){
+
         Map<String, Object> result = new HashMap<>();
         if(fav){
             String token = request.getHeader("token");

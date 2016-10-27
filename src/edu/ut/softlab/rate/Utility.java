@@ -284,7 +284,6 @@ public class Utility {
     }
 
     public static void iphonePush(String content, String token, String certificate, String sid){
-        System.out.println(certificate);
         ApnsService service =
                 APNS.newService()
                         .withCert(certificate, account_information.getProperty("PUSH_PWD"))
