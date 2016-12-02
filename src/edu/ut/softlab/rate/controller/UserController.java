@@ -30,7 +30,6 @@ import edu.ut.softlab.rate.service.IUserService;
 import java.io.File;
 import java.util.*;
 
-
 @Controller
 @RequestMapping("/user")
 public class UserController {
@@ -44,8 +43,6 @@ public class UserController {
     @Resource(name = "currencyService")
     private ICurrencyService currencyService;
 
-
-
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> register(@RequestParam (value = "uname", required = true)String uname,
                            @RequestParam (value = "email", required = true)String email,
@@ -54,12 +51,12 @@ public class UserController {
         String uid = userService.register(uname, email, telephone, password);
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> result = new HashMap<>();
-        if(uid != null){
+        if (uid != null){
             result.put("uid", uid);
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }else {
+        } else {
             response.put(ResponseField.error_message, "email has been used");
             response.put(ResponseField.error_code, 300);
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
@@ -69,9 +66,9 @@ public class UserController {
 
 	@RequestMapping(value="/activate", method = RequestMethod.GET)
 	public String activateUser(@RequestParam("validateCode") String validateCode, @RequestParam("uid") String uid ){
-		if(userService.Validate(uid, validateCode)){
+		if (userService.Validate(uid, validateCode)) {
 			return "redirect:/success.html";
-		}else{
+		} else {
 			return "redirect:/fail.html";
 		}
 	}
@@ -502,25 +499,22 @@ public class UserController {
         }
     }
 
-    @RequestMapping(value = "/verification_code", method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getVerificationCode(HttpServletRequest request){
+    @RequestMapping(value = "/verification_code", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> getVerificationCode(@RequestParam String email, HttpServletRequest request){
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
-        String token = request.getHeader("token");
-        User user = deviceService.findUserByToken(token);
-        if(token != null){
-            String code = userService.sendVerificationCode(user);
-            System.out.println(code);
-            result.put("status", "code has been sent");
-            response.put(ResponseField.result, result);
-            response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }else {
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
             response.put(ResponseField.error_code, 350);
-            response.put(ResponseField.error_message, "token error");
+            response.put(ResponseField.error_message, "no email found");
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+        String code = userService.sendVerificationCode(user);
+        result.put("status", "code has been sent");
+        response.put(ResponseField.result, result);
+        response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/change_password", method = RequestMethod.POST)

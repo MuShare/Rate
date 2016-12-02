@@ -71,18 +71,17 @@ public class UpdateTest {
     private static final Logger logger =
             LoggerFactory.getLogger(UpdateTest.class);
 
-
-
-
     @Test
     @Rollback(false)
     @Transactional
     public void rateTest(){
         try{
-            org.springframework.core.io.Resource resource = new ClassPathResource(account_information.getProperty("PUSH_CA"));
-            String certificate = resource.getFile().getPath();
+//            org.springframework.core.io.Resource resource = new ClassPathResource(account_information.getProperty("PUSH_CA"));
+//            String certificate = resource.getFile().getPath();
+            Utility.send("alexlai@softlab.cs.tsukuba.ac.jp", "test", "test mail");
         }catch (Exception ex){
             System.out.println("error:"+ex.toString());
         }
+
     }
 }

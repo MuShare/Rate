@@ -304,6 +304,11 @@ public class UserService extends AbstractService<User> implements IUserService {
     }
 
     @Override
+    public User getUserByEmail(String email) {
+        return userDao.getByEmail(email);
+    }
+
+    @Override
     public String addSubscribe(Subscribe subscribe, String fromCid, String toCid, String uid) {
         Currency fromCurrency = currencyDao.findOne(fromCid);
         Currency toCurrency = currencyDao.findOne(toCid);
