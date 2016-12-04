@@ -432,7 +432,7 @@ public class UserController {
     }
 
     @RequestMapping(value = "/upload_image", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam(value="file",required=false) MultipartFile file,
+    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam(value="file", required=false) MultipartFile file,
                                                            HttpServletRequest request){
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
@@ -500,12 +500,12 @@ public class UserController {
     }
 
     @RequestMapping(value = "/verification_code", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> getVerificationCode(@RequestParam String email, HttpServletRequest request){
+    public ResponseEntity<Map<String, Object>> getVerificationCode(@RequestParam String email){
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         User user = userService.getUserByEmail(email);
         if (user == null) {
-            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.error_code, 360);
             response.put(ResponseField.error_message, "no email found");
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -518,40 +518,38 @@ public class UserController {
     }
 
     @RequestMapping(value = "/change_password", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> changePass(@RequestParam (value = "password", required = true)String password,
-                                                          @RequestParam (value = "vertification_code", required = true)String vertificationCode,
-                                                          HttpServletRequest request){
+    public ResponseEntity<Map<String, Object>> changePass(@RequestParam String email, @RequestParam String password, @RequestParam String vertificationCode){
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
-        String token = request.getHeader("token");
-        User user = deviceService.findUserByToken(token);
-        if(user != null){
-            if(user.getVerificationCode().equals(vertificationCode)){
-                Date expiration = user.getCodeExpiration();
-                if(expiration.after(new Date())){
-                    userService.changePassword(user, password);
-                    result.put("status", "OK");
-                    response.put(ResponseField.result, result);
-                    response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                }else {
-                    response.put(ResponseField.error_message, "expiration");
-                    response.put(ResponseField.error_code, 344);
-                    response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
-                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-                }
-            }else {
-                response.put(ResponseField.error_message, "code invalid");
-                response.put(ResponseField.error_code, 343);
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
+            response.put(ResponseField.error_code, 360);
+            response.put(ResponseField.error_message, "no email found");
+            response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+
+        if (user.getVerificationCode().equals(vertificationCode)){
+            Date expiration = user.getCodeExpiration();
+            if (expiration.after(new Date())){
+                userService.changePassword(user, password);
+                result.put("status", "OK");
+                response.put(ResponseField.result, result);
+                response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put(ResponseField.error_message, "expiration");
+                response.put(ResponseField.error_code, 344);
                 response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }
         }else {
-            response.put(ResponseField.error_message, "token error");
-            response.put(ResponseField.error_code, 350);
+            response.put(ResponseField.error_message, "code invalid");
+            response.put(ResponseField.error_code, 343);
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+
     }
 
     @RequestMapping(value = "/change_uname", method = RequestMethod.POST)
