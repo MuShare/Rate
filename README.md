@@ -1,95 +1,216 @@
-DWR说明文档
+# API Document for Rate Assistant
+This is the REST API document for Rate Assistant, a currency exchange rate search and subscription application.
 
-1. UserService
+1. User
 ====
+(1)`api/user/register`
 
-(1)`String register(String uname, String email, String telephone, String password);`
+   - Register a new account.
+   - method: POST
+   - param:
+      - email(String): email of an account
+      - password(String): password of this account
+      - telephone(String): telephone of this account
+      - uname(String): user name
+   - return:
+      - uid(String): physical id of this account.
+   - error:
+      - ErrorCodeEmailExsit(300): This email has been signed up.
+      - ErrorCodeTelephoneExsit(200): This telephone has been signed up.
 
-   + return: 用户物理id，为空说明注册失败
-   + uname: 用户名
-   + email: 邮箱
-   + telephone: 电话
-   + password: 密码
+(2)`api/user/login`
 
-(2)`public boolean login(String email, String password, HttpSession session)`
-+ 用户登录
-+ return: 登录是否成功
-+ email: 邮箱
-+ password: 用户密码
-+ session: 当前session
+   - Login at first time.
+   - method: POST
+   - param:
+      - email(String): email of an account
+      - password(String): password of this account
+      - device_token(String): device token from APNs server
+      - os(String): name of operating system and system version
+      - did(String): uuid of device
+      - lan(String): main language of this device
+   - return:
+      - login_token(String): token for this device
+   - error:
+      - ErrorCodePasswordWrong(301): Password is wrong.
+      - ErrorCodeAccountNotFound(302): This account is not exist.
 
-(3) `public boolean editSubscribe(String subscribeSid, String fromCurrencyCid, String toCurrencyCid, String sname, double min, double max, boolean isEnable, boolean isOnce, boolean isSendEmail, boolean isSendSms)`
-+ 修改订阅
-+ return 是否修改成功 true成功 false失败
-+ subscribeSid 订阅id
-+ fromCurrencyCid from货币id
-+ toCurrencyCid to货币id
-+ sname 订阅名称
-+ min 最小值
-+ max 最大值
-+ isEnable 是否激活
-+ isOnce 是否只通知一次
-+ isSendEmail 是否发送邮件
-+ isSendSms 是否发送短信
+(3)`api/user/logout`
 
-(4) `public boolean deleteSuscribe(String subscribeSid)`
-+ 删除订阅
-+ return 是否删除成功
-+ subscribeSid 订阅id
+   - Logout an account.
+   - method: DELETE
+   - header:
+      - token(String): authentication token
+   - return:
+      - status(String): logout status
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
 
-(5) `public String addSubscribe(String sname, double min, double max, boolean isEnable, boolean isOnce, boolean isSendEmail, boolean isSendSms, String from, String to, String userId)`
-+ 修改订阅
-+ return 是否修改成功 成功则返回id 错误则返回为空
-+ subscribeSid 订阅id
-+ fromCurrencyCid from货币id
-+ toCurrencyCid to货币id
-+ sname 订阅名称
-+ min 最小值
-+ max 最大值
-+ isEnable 是否激活
-+ isOnce 是否只通知一次
-+ isSendEmail 是否发送邮件
-+ isSendSms 是否发送短信
-+ uid 用户id
+(4)`api/user/change_uname`
 
-(6) `public List<SubscribeBean> getSubscribes(HttpSession session)`
-+ 获取当前用户所有订阅
-+ return 当前用户订阅的List
-+ session 当前session
+   - Modify user name.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - uname(String): new user name
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
 
-(7) `public UserBean checkSession(HttpSession session)`
-+ 检测当前session
-+ return 是否有session 有则返回当前用户 无则返回null
+(5)`api/user/device_token`
+
+   - Resubmit device token when app is opened.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - device_token(String): the new device token from APNs server.
+      - lan(String): main language of this device
+   - return:
+      - token(String): new authentication token
+      - uname(String): name of this user
+      - telephone(int): telephone of this user
+      - email(String): email of this user
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+
+(6)`api/user/favorite`
+
+   - Add or remove a favorite currency.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - cid(String): currency id
+      - favorite(boolean): add(use true) or remove(user false) this favorite currency
+   - return:
+      - fid(String): physical id of this favorite reocrd
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+
+(7)`api/user/subscribe`
+
+   - Add a new subscription.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - sname(String): Subscription name
+      - from(String): Physical id of from currency
+      - to(String): Physical id of to currency
+      - isEnable(boolean): This subscription is enable or not
+      - isSendEmail(boolean): Send email to user
+      - isSendSms(boolean): Send SMS to user
+      - threshold(double): threshold
+      - isAbove(boolean): Notify user when current rate value is above than threshold or not.
+   - return:
+      - sid(String): physical id of this subscription
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+      - ErrorCodeMailNeedActivate(330): Email not active.
+
+(8)`api/user/subscribe`
+
+   - Add a new subscription.
+   - method: DELETE
+   - header:
+      - token(String): authentication token
+   - param:
+      - sid(String): physical id of this subscription
+   - return:
+      - isDeleted(boolean): this subscription is deleted successfully or not
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+
+(9)`api/user/subscribe/update`
+
+   - Add a new subscription.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - sid(String): physical id of this subscription
+      - sname(String): Subscription name
+      - isEnable(boolean): This subscription is enable or not
+      - isSendEmail(boolean): Send email to user
+      - isSendSms(boolean): Send SMS to user
+      - threshold(double): threshold
+      - isAbove(boolean): Notify user when current rate value is above than threshold or not.
+   - return:
+      - sid(String): physical id of this subscription
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+      - ErrorCodeMailNeedActivate(330): Email not active.
+
+(10)`api/user/subscribes`
+
+   - Add a new subscription.
+   - method: PUT
+   - header:
+      - token(String): authentication token
+   - param:
+      - rev(int): revision id
+      - sids(Array\<String>): physical id list of subscriptions
+   - return:
+      - isUpdated(boolean): subscriptions are updated or not
+      - data.createdOrUpdated(Array\<Subscribe>): new subscriptions or updated subscriptions.
+      - data.deletedSubcribes(Array\<String>): physical id list of deleted subscriptions
+      - data.rates(Dictionary\<String, double>): current rates for subscriptions
+      - current(int): current revision
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+
+(11)`api/user/notification`
+
+   - Change notification state.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - enable(enable): remote notification for subscription is enable or not
+   - return:
+      - status(String): status
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+
+(12)`api/user/add_feedback`
+
+   - Add a feedback.
+   - method: POST
+   - param:
+      - type(int): type of faceback
+      - content(String): content of feedback
+      - contact(String): contact way of sender
+   - return:
+      - fdid(String): physical id of this feedback
+
+(13)`api/user/verification_code`
+
+   - Send a verification code to user's email for modifying password.
+   - method: POST
+   - param:
+      - email(String): email of an account
+   - return:
+      - status(String): status
+   - error:
+      - ErrorCodeMailNotExist(360): This email is not exist in database.
+
+(14)`api/user/change_password`
+
+   - Modify password by submitting verification code.
+   - method: POST
+   - param:
+      - email(String): email of an account
+      - password(String): new password of this account
+      - vertificationCode(String): verification code
+   - return:
+      - status(String): status
+   - error:
+      - ErrorCodeMailNotExist(360): This email is not exist in database.
+      - ErrorCodeInvalidVerification(343): Verification code is error.
+      - ErrorCodeVerificationExpiration(344): Verification code is out of date.
 
 
-2. CurrencyeService
-
-
-(1) `public List<Currency> getCurrencyList()`
-+ 获取当前所有货币列表
-+ return 所有货币信息列表
 
 
 
-3. RateService====
-
-(1) `public ChartData getHistoryRate(String start, String end, String fromCurrencyId, String toCurrencyId)`
-+ 返回两个货币历史比值
-+ return ChartData
-+ start 开始日期
-+ end 结束日期
-+ fromCurrencyId from货币id
-+ tourrencyId to货币id
-
-(2) `public double getCurrentRate(String fromCurrencyCid, String toCurrencyCid)`
-+ 获取两个货币当前时间的比值
-+ return double比值
-+ fromCurrencyId from货币id
-+ tourrencyId to货币id
-
-(3)`public ChartData getSpecificRate`
-+获取某一种货币兑美元的比值
-+ return ChartData
-+ start 开始日期
-+ end 结束日期
-+ currencyId 货币Id

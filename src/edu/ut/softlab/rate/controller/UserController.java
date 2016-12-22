@@ -474,24 +474,23 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
-        if(user != null){
-            if(rev.equals(user.getAvatarRevision())){
+        if (user != null){
+            if (rev.equals(user.getAvatarRevision())){
                 result.put("isUpdated", "false");
-            }
-            else {
+            } else {
                 result.put("isUpdated", "true");
-                try{
+                try {
                     byte[] image = userService.getAvatar(user, request.getServletContext());
                     result.put("image", image);
                     result.put("rev", user.getAvatarRevision());
-                }catch (Exception ex){
+                } catch (Exception ex){
                     System.out.println(ex.toString());
                 }
             }
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }else {
+        } else {
             response.put(ResponseField.error_message, "token error");
             response.put(ResponseField.error_code, 350);
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
@@ -559,7 +558,6 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         String token = request.getHeader("token");
         User user = deviceService.findUserByToken(token);
-        System.out.println(uname);
         if(user != null){
             userService.changeUname(user, uname);
             result.put("status", "OK");
