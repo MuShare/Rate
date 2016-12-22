@@ -210,7 +210,27 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
       - ErrorCodeInvalidVerification(343): Verification code is error.
       - ErrorCodeVerificationExpiration(344): Verification code is out of date.
 
+2. Currency
+====
+(1)`api/currencies`
 
+   - Get currency list.
+   - method: GET
+   - param:
+      - lan(String): language of this device
+      - rev(int): currency revision
+   - return:
+      - currencies(Array\<Currency): currency list
+      - revision(int): current revision
+
+(2)`api/currencies/add`
+
+   - Get currency list.
+   - method: POST
+   - param:
+      - code(String): currency code
+   - return:
+      - result: currency message
 
 
 

@@ -34,7 +34,7 @@ public class CurrencyController {
         List<CurrencyBean> currencies = new ArrayList<>();
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
-        if(rev == null){
+        if (rev == null){
             response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
             response.put(ResponseField.error_message, "rev is required");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -53,13 +53,13 @@ public class CurrencyController {
             response.put(ResponseField.result, result);
             response.put(ResponseField.HttpStatus, HttpStatus.OK.value());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }else{
+        } else{
             Currency currency = currencyService.findOne(cid);
-            if(currency == null){
+            if (currency == null){
                 response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
                 response.put(ResponseField.error_message, "No requested currency");
                 return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
-            }else {
+            } else {
                 CurrencyBean currencyBean = new CurrencyBean(currency);
                 currencyBean.setIcon(currencyCountry.get(currency.getCode()).toString().toLowerCase());
                 currencyBean.setName(java.util.Currency.getInstance(currency.getCode()).getDisplayName(Locale.forLanguageTag(lan)));
