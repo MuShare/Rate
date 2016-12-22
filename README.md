@@ -1,7 +1,61 @@
 # API Document for Rate Assistant
 This is the REST API document for Rate Assistant, a currency exchange rate search and subscription application.
 
-1. User
+1. Currency
+====
+(1)`api/currencies`
+
+   - Get currency list.
+   - method: GET
+   - param:
+      - lan(String): language of this device
+      - rev(int): currency revision
+   - return:
+      - currencies(Array\<Currency): currency list
+      - revision(int): current revision
+
+(2)`api/currencies/add`
+
+   - Get currency list.
+   - method: POST
+   - param:
+      - code(String): currency code
+   - return:
+      - result: currency message
+
+2. Rate
+====
+(1)`api/rate/current`
+
+   - Get current exchange rate.
+   - method: GET
+   - header:
+      - token(String): authentication token, needed only favorite is true
+   - param:
+      - from(String): physical id of from currency
+      - to(String): physical id of to currency
+      - favorite(boolean): load only favorite currencies' exchange rate or not
+   - return if from and to are not null at same time
+      - rate(double): current exchange rate
+   - return if from or to is not null
+      - rates(Dictionary<String, double>): dictionary of currency physical id and current exchange rate. Authentication token is necessary when favorite is true.
+   - ErrorCodeTokenError(350): Authentication token error.
+
+(2)`api/currencies/history`
+
+   - Get historical exchange rate.
+   - method: GET
+   - header:
+      - token(String): authentication token, needed only favorite is true
+   - param:
+      - from(String): physical id of from currency
+      - to(String): physical id of to currency
+      - start(long): start timestamp
+      - end(long): end timestamp
+   - return 
+      - data(ChartData): historical exchange rate
+
+3. User
 ====
 (1)`api/user/register`
 
@@ -210,27 +264,9 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
       - ErrorCodeInvalidVerification(343): Verification code is error.
       - ErrorCodeVerificationExpiration(344): Verification code is out of date.
 
-2. Currency
-====
-(1)`api/currencies`
 
-   - Get currency list.
-   - method: GET
-   - param:
-      - lan(String): language of this device
-      - rev(int): currency revision
-   - return:
-      - currencies(Array\<Currency): currency list
-      - revision(int): current revision
 
-(2)`api/currencies/add`
 
-   - Get currency list.
-   - method: POST
-   - param:
-      - code(String): currency code
-   - return:
-      - result: currency message
 
 
 
