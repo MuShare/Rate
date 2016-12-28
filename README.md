@@ -178,7 +178,7 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
 
 (9)`api/user/subscribe/update`
 
-   - Add a new subscription.
+   - Update subscription content.
    - method: POST
    - header:
       - token(String): authentication token
@@ -198,7 +198,7 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
 
 (10)`api/user/subscribes`
 
-   - Add a new subscription.
+   - Update subscription list.
    - method: PUT
    - header:
       - token(String): authentication token
