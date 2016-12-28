@@ -165,7 +165,7 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
 
 (8)`api/user/subscribe`
 
-   - Add a new subscription.
+   - Delete a subscription.
    - method: DELETE
    - header:
       - token(String): authentication token
