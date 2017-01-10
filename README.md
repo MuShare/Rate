@@ -264,6 +264,20 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
       - ErrorCodeInvalidVerification(343): Verification code is error.
       - ErrorCodeVerificationExpiration(344): Verification code is out of date.
 
+(15)`api/user/upload_image`
+
+   - Upload user avatar.
+   - method: POST
+   - header:
+      - token(String): authentication token
+   - param:
+      - file(MultipartFile): data of avatar image
+   - return:
+      - status(String): status
+   - error:
+      - ErrorCodeTokenError(350): Authentication token error.
+      - ErrorCodeAvatarSizeError(346): File size is huge.
+      - ErrorCodeAvatarEmpty(345): File is empty.
 
 
 

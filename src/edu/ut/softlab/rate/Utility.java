@@ -1,7 +1,7 @@
 package edu.ut.softlab.rate;
 
-
-
+import com.notnoop.apns.APNS;
+import com.notnoop.apns.ApnsService;
 import edu.ut.softlab.rate.dao.ICurrencyDao;
 import edu.ut.softlab.rate.model.Currency;
 import net.coobird.thumbnailator.Thumbnails;
@@ -14,30 +14,26 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.security.MessageDigest;
-import java.util.*;
 import javax.imageio.ImageIO;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import com.notnoop.apns.*;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
-
-
-/**
- * Created by alex on 16-4-12.
- */
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.util.*;
 
 @Component
 public class Utility {

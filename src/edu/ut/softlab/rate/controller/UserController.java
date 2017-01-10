@@ -444,7 +444,7 @@ public class UserController {
                 String path = userService.uploadImage(user, pathRoot, file);
                 if(path.equals("size error")){
                     response.put(ResponseField.error_message, path);
-                    response.put(ResponseField.error_code, 344);
+                    response.put(ResponseField.error_code, 346);
                     response.put(ResponseField.HttpStatus, HttpStatus.BAD_REQUEST.value());
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 }else {

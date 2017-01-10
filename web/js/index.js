@@ -1,6 +1,3 @@
-/**
- * Created by Alex on 2016/8/15.
- */
 
 var currencies = [];
 var pop_template = '<div class="marker"> <div class="ui two column divided grid">' +
