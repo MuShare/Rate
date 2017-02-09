@@ -41,12 +41,10 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
       - rates(Dictionary<String, double>): dictionary of currency physical id and current exchange rate. Authentication token is necessary when favorite is true.
    - ErrorCodeTokenError(350): Authentication token error.
 
-(2)`api/currencies/history`
+(2)`api/rate/history`
 
    - Get historical exchange rate.
    - method: GET
-   - header:
-      - token(String): authentication token, needed only favorite is true
    - param:
       - from(String): physical id of from currency
       - to(String): physical id of to currency
