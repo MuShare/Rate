@@ -1,8 +1,8 @@
 # API Document for Rate Assistant
 This is the REST API document for Rate Assistant, a currency exchange rate search and subscription application.
 
-1. Currency
-====
+### 1. Currency
+
 (1)`api/currencies`
 
    - Get currency list.
@@ -23,8 +23,8 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
    - return:
       - result: currency message
 
-2. Rate
-====
+### 2. Rate
+
 (1)`api/rate/current`
 
    - Get current exchange rate.
@@ -53,8 +53,8 @@ This is the REST API document for Rate Assistant, a currency exchange rate searc
    - return 
       - data(ChartData): historical exchange rate
 
-3. User
-====
+### 3. User
+
 (1)`api/user/register`
 
    - Register a new account.
